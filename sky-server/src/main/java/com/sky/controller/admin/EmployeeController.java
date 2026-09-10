@@ -104,10 +104,20 @@ public class EmployeeController {
      * @return
      */
     @PostMapping("/status/{status}")
-    public Result startOrStop(@PathVariable Integer status,Long id) {
+    public Result startOrStop(@PathVariable Integer status, Long id) {
         log.info("启用禁用员工：{}，状态：{}", id, status);
-        employeeService.startOrStop(status,id);
+        employeeService.startOrStop(status, id);
         return Result.success();
     }
 
+    /**
+     * 根据id查询员工
+     * @param id
+     * @return
+     */
+    @GetMapping("/{id}")
+    public Result<Employee> getById(@PathVariable Long id) {
+        log.info("根据id查询员工：{}", id);
+        return Result.success(employeeService.getById(id));
+    }
 }
