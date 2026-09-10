@@ -120,4 +120,16 @@ public class EmployeeController {
         log.info("根据id查询员工：{}", id);
         return Result.success(employeeService.getById(id));
     }
+
+    /**
+     * 编辑员工信息
+     * @param employeeDTO
+     * @return
+     */
+    @PutMapping
+    public Result update(@RequestBody EmployeeDTO employeeDTO) {
+        log.info("编辑员工信息：{}", employeeDTO);
+        employeeService.update(employeeDTO);
+        return Result.success();
+    }
 }
