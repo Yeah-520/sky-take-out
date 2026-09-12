@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
@@ -45,6 +46,7 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
 
     /**
      * 通过knife4j生成接口文档
+     *
      * @return
      */
     @Bean
@@ -66,6 +68,7 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
 
     /**
      * 设置静态资源映射
+     *
      * @param registry
      */
     @Override
@@ -73,10 +76,14 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         log.info("开始设置静态资源映射");
         registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
+        // 规则：访问 /upload/** 映射到本地 file:D:/upload/
+        registry.addResourceHandler("/upload/**")
+                .addResourceLocations("file:D:/Project/upload/");
     }
 
     /**
      * 拓展SpringMVC的消息转换器
+     *
      * @param converters the list of configured converters to extend
      */
     @Override
@@ -87,6 +94,6 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         // 设置对象映射器
         converter.setObjectMapper(new JacksonObjectMapper());
         // 将自定义的ObjectMapper注册到消息转换器中
-        converters.add(0,converter);
+        converters.add(0, converter);
     }
 }
