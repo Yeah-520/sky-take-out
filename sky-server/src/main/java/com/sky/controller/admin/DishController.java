@@ -6,6 +6,7 @@ import com.sky.mapper.SetmealDishMapper;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.DishService;
+import com.sky.vo.DishVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +52,7 @@ public class DishController {
 
     /**
      * 菜品批量删除
+     *
      * @param ids 菜品id列表
      * @return 删除结果
      */
@@ -58,6 +60,31 @@ public class DishController {
     public Result delete(@RequestParam List<Long> ids) {
         log.info("删除菜品：{}", ids);
         dishService.deleteBatch(ids);
+        return Result.success();
+    }
+
+    /**
+     * 根据id查询菜品详情
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping("/{id}")
+    public Result<DishVO> getById(@PathVariable Long id) {
+        log.info("根据id查询菜品详情：{}", id);
+        DishVO dishVO = dishService.getByIdWithFlavor(id);
+        return Result.success(dishVO);
+    }
+
+    /**
+     * 修改菜品
+     * @param dishDTO 菜品信息
+     * @return 修改结果
+     */
+    @PutMapping
+    public Result update(@RequestBody DishDTO dishDTO) {
+        log.info("修改菜品：{}", dishDTO);
+        dishService.updateWithFlavor(dishDTO);
         return Result.success();
     }
 }
