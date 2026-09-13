@@ -2,12 +2,15 @@ package com.sky.controller.admin;
 
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
+import com.sky.mapper.SetmealDishMapper;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.DishService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 菜品管理
@@ -44,5 +47,17 @@ public class DishController {
         log.info("分页查询菜品，第{}页，每页{}条，名称：{}", dishPageQueryDTO.getPage(), dishPageQueryDTO.getPageSize(), dishPageQueryDTO.getName());
         PageResult pageResult = dishService.pageQuery(dishPageQueryDTO);
         return Result.success(pageResult);
+    }
+
+    /**
+     * 菜品批量删除
+     * @param ids 菜品id列表
+     * @return 删除结果
+     */
+    @DeleteMapping
+    public Result delete(@RequestParam List<Long> ids) {
+        log.info("删除菜品：{}", ids);
+        dishService.deleteBatch(ids);
+        return Result.success();
     }
 }
