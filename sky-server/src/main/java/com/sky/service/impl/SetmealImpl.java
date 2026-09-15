@@ -11,13 +11,16 @@ import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
 import com.sky.vo.SetmealVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class SetmealImpl implements SetmealService {
 
@@ -80,5 +83,20 @@ public class SetmealImpl implements SetmealService {
         setmealVO.setSetmealDishes(setmealDishes);
 
         return setmealVO;
+    }
+
+    /**
+     * 根据id删除套餐及关联菜品
+     *
+     * @param ids 套餐id列表
+     */
+    @Override
+    public void delete(List<Long> ids) {
+        if (!ids.isEmpty()) {
+            setmealMapper.delete(ids);
+            setmealDishMapper.deleteBySetmealIds(ids);
+        } else {
+            log.info("删除的id列表为空");
+        }
     }
 }
