@@ -84,4 +84,17 @@ public class SetmealController {
         setmealService.startOrStop(status, id);
         return Result.success();
     }
+
+    /**
+     * 修改套餐
+     *
+     * @param setmealDTO 套餐信息
+     * @return 修改结果
+     */
+    @PutMapping
+    public Result<String> update(@RequestBody SetmealDTO setmealDTO) {
+        log.info("修改套餐:{}", setmealDTO);
+        setmealService.update(setmealDTO);
+        return Result.success();
+    }
 }
