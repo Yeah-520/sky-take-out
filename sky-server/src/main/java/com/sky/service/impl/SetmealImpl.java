@@ -2,10 +2,15 @@ package com.sky.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.sky.constant.MessageConstant;
+import com.sky.constant.StatusConstant;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.entity.Dish;
 import com.sky.entity.Setmeal;
 import com.sky.entity.SetmealDish;
+import com.sky.exception.SetmealEnableFailedException;
+import com.sky.mapper.DishMapper;
 import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
@@ -17,8 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -29,6 +34,9 @@ public class SetmealImpl implements SetmealService {
 
     @Autowired
     private SetmealDishMapper setmealDishMapper;
+
+    @Autowired
+    private DishMapper dishMapper;
 
     /**
      * 分页查询套餐
@@ -59,9 +67,7 @@ public class SetmealImpl implements SetmealService {
         Long setmealId = setmeal.getId();
 
         List<SetmealDish> setmealDishes = setmealDTO.getSetmealDishes();
-        setmealDishes.forEach(setmealDish -> {
-            setmealDish.setSetmealId(setmealId);
-        });
+        setmealDishes.forEach(setmealDish -> setmealDish.setSetmealId(setmealId));
 
         //保存套餐和菜品的关联关系
         setmealDishMapper.insertBatch(setmealDishes);
@@ -91,6 +97,7 @@ public class SetmealImpl implements SetmealService {
      * @param ids 套餐id列表
      */
     @Override
+    @Transactional
     public void delete(List<Long> ids) {
         if (!ids.isEmpty()) {
             setmealMapper.delete(ids);
@@ -98,5 +105,30 @@ public class SetmealImpl implements SetmealService {
         } else {
             log.info("删除的id列表为空");
         }
+    }
+
+    /**
+     * 根据id修改套餐状态
+     * @param status 状态
+     * @param id     套餐id
+     */
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        //起售套餐时，判断套餐内是否有停售菜品，有停售菜品提示"套餐内包含未启售菜品，无法启售"
+        if (Objects.equals(status, StatusConstant.ENABLE)) {
+            List<Dish> dishList = dishMapper.getBySetmealId(id);
+            if (dishList != null && !dishList.isEmpty()) {
+                dishList.forEach(dish -> {
+                    if (StatusConstant.DISABLE.equals(dish.getStatus())) {
+                        throw new SetmealEnableFailedException(MessageConstant.SETMEAL_ENABLE_FAILED);
+                    }
+                });
+            }
+        }
+        Setmeal setmeal = Setmeal.builder()
+                .id(id)
+                .status(status)
+                .build();
+        setmealMapper.update(setmeal);
     }
 }

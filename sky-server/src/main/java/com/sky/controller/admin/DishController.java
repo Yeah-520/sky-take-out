@@ -3,7 +3,6 @@ package com.sky.controller.admin;
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
-import com.sky.mapper.SetmealDishMapper;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.DishService;
@@ -32,7 +31,7 @@ public class DishController {
      * @return 新增菜品的id
      */
     @PostMapping
-    public Result save(@RequestBody DishDTO dishDTO) {
+    public Result<String> save(@RequestBody DishDTO dishDTO) {
         log.info("新增菜品：{}", dishDTO);
         dishService.saveWithFlavor(dishDTO);
         return Result.success();
@@ -58,7 +57,7 @@ public class DishController {
      * @return 删除结果
      */
     @DeleteMapping
-    public Result delete(@RequestParam List<Long> ids) {
+    public Result<String> delete(@RequestParam List<Long> ids) {
         log.info("删除菜品：{}", ids);
         dishService.deleteBatch(ids);
         return Result.success();
@@ -67,8 +66,8 @@ public class DishController {
     /**
      * 根据id查询菜品详情
      *
-     * @param id
-     * @return
+     * @param id 菜品id
+     * @return 菜品详情
      */
     @GetMapping("/{id}")
     public Result<DishVO> getById(@PathVariable Long id) {
@@ -84,7 +83,7 @@ public class DishController {
      * @return 修改结果
      */
     @PutMapping
-    public Result update(@RequestBody DishDTO dishDTO) {
+    public Result<String> update(@RequestBody DishDTO dishDTO) {
         log.info("修改菜品：{}", dishDTO);
         dishService.updateWithFlavor(dishDTO);
         return Result.success();
@@ -100,5 +99,12 @@ public class DishController {
     public Result<List<Dish>> list(Long categoryId) {
         log.info("根据分类id查询菜品列表：{}", categoryId);
         return Result.success(dishService.list(categoryId));
+    }
+
+    @PostMapping("/status/{status}")
+    public Result<String> updateStatus(@PathVariable Integer status, Long id) {
+        log.info("修改菜品状态，status:{}, id:{}", status, id);
+        dishService.updateStatus(status, id);
+        return Result.success();
     }
 }

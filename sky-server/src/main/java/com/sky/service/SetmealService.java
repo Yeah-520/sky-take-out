@@ -38,4 +38,12 @@ public interface SetmealService {
      * @param ids 套餐id列表
      */
     void delete(List<Long> ids);
+
+    /**
+     * 修改套餐状态
+     *
+     * @param status 状态
+     * @param id     套餐id
+     */
+    void startOrStop(Integer status, Long id);
 }

@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -73,7 +74,7 @@ public class DishServiceImpl implements DishService {
         // 判断菜品是否在售
         for (Long id : ids) {
             Dish dish = dishMapper.getById(id);
-            if (dish.getStatus() == StatusConstant.ENABLE) {
+            if (Objects.equals(dish.getStatus(), StatusConstant.ENABLE)) {
                 throw new RuntimeException(MessageConstant.DISH_ON_SALE);
             }
         }
@@ -151,5 +152,10 @@ public class DishServiceImpl implements DishService {
     @Override
     public List<Dish> list(Long categoryId) {
         return dishMapper.list(categoryId);
+    }
+
+    @Override
+    public void updateStatus(Integer status, Long id) {
+        dishMapper.updateStatus(status, id);
     }
 }
