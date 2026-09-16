@@ -34,8 +34,8 @@ public class EmployeeController {
     /**
      * 登录
      *
-     * @param employeeLoginDTO
-     * @return
+     * @param employeeLoginDTO 员工登录DTO
+     * @return 员工登录结果
      */
     @PostMapping("/login")
     public Result<EmployeeLoginVO> login(@RequestBody EmployeeLoginDTO employeeLoginDTO) {
@@ -64,7 +64,7 @@ public class EmployeeController {
     /**
      * 退出
      *
-     * @return
+     * @return 退出结果
      */
     @PostMapping("/logout")
     public Result<String> logout() {
@@ -74,8 +74,8 @@ public class EmployeeController {
     /**
      * 新增员工
      *
-     * @param employeeDTO
-     * @return
+     * @param employeeDTO 员工DTO
+     * @return 新增结果
      */
     @PostMapping
     public Result<String> save(@RequestBody EmployeeDTO employeeDTO) {
@@ -87,8 +87,8 @@ public class EmployeeController {
     /**
      * 员工分页查询
      *
-     * @param employeePageQueryDTO
-     * @return
+     * @param employeePageQueryDTO 员工分页查询DTO
+     * @return 员工分页查询结果
      */
     @GetMapping("/page")
     public Result<PageResult> page(EmployeePageQueryDTO employeePageQueryDTO) {
@@ -99,12 +99,12 @@ public class EmployeeController {
     /**
      * 启用禁用员工
      *
-     * @param status
-     * @param id
-     * @return
+     * @param status 状态
+     * @param id     员工ID
+     * @return 启用禁用结果
      */
     @PostMapping("/status/{status}")
-    public Result startOrStop(@PathVariable Integer status, Long id) {
+    public Result<String> startOrStop(@PathVariable Integer status, Long id) {
         log.info("启用禁用员工：{}，状态：{}", id, status);
         employeeService.startOrStop(status, id);
         return Result.success();
@@ -112,8 +112,9 @@ public class EmployeeController {
 
     /**
      * 根据id查询员工
-     * @param id
-     * @return
+     *
+     * @param id 员工ID
+     * @return 员工信息
      */
     @GetMapping("/{id}")
     public Result<Employee> getById(@PathVariable Long id) {
@@ -123,11 +124,12 @@ public class EmployeeController {
 
     /**
      * 编辑员工信息
-     * @param employeeDTO
-     * @return
+     *
+     * @param employeeDTO 员工DTO
+     * @return 编辑结果
      */
     @PutMapping
-    public Result update(@RequestBody EmployeeDTO employeeDTO) {
+    public Result<String> update(@RequestBody EmployeeDTO employeeDTO) {
         log.info("编辑员工信息：{}", employeeDTO);
         employeeService.update(employeeDTO);
         return Result.success();

@@ -85,13 +85,6 @@ public class DishServiceImpl implements DishService {
             throw new RuntimeException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
         }
 
-        // 删除菜品表中对应的数据
-        /*for (Long id : ids) {
-            dishMapper.deleteById(id);
-            // 删除菜品关联口味
-            dishFlavorMapper.deleteByDishId(id);
-        }*/
-
         // 批量删除菜品表中对应的数据
         dishMapper.deleteByIds(ids);
 

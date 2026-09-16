@@ -17,14 +17,12 @@ import java.util.UUID;
 @RequestMapping("/admin/common")
 @Slf4j
 public class CommonController {
-    /**
-     * 上传本地目录
-     */
+    //TODO 后期需要改成OSS上传
     private static final String UPLOAD_DIR = "D:/Project/upload/";
 
     @PostMapping("/upload")
     public Result<String> upload(MultipartFile file) {
-        log.info("文件上传：{}", file);
+        log.info("文件上传：{}", file.getOriginalFilename());
         try {
             // 1. 判断文件是否为空
             if (file.isEmpty()) {
@@ -47,6 +45,7 @@ public class CommonController {
 
             // 返回访问地址（如果需要通过web访问这张图片，后续要配置静态资源映射）
             String url = "http://127.0.0.1:8080" + "/upload/" + newFileName;
+            log.info("文件上传成功，访问地址：{}", url);
             return Result.success(url);
         } catch (Exception e) {
             log.error("文件上传失败", e);
