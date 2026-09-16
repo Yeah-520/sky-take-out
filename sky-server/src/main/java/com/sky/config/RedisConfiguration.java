@@ -17,8 +17,11 @@ public class RedisConfiguration {
         RedisTemplate redisTemplate = new RedisTemplate();
         // 设置连接工厂
         redisTemplate.setConnectionFactory(redisConnectionFactory);
-        // 设置值的序列化器
+        // 设置值的序列化器StringRedisSerializer
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
         redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(new StringRedisSerializer());
         return redisTemplate;
     }
 
