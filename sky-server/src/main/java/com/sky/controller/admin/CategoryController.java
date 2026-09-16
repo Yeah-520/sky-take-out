@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 /**
@@ -18,7 +19,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/admin/category")
-@Api(tags = "分类相关接口")
 @Slf4j
 public class CategoryController {
 
@@ -27,12 +27,12 @@ public class CategoryController {
 
     /**
      * 新增分类
-      * @param categoryDTO 分类信息
-     * @return
+     *
+     * @param categoryDTO 分类信息
+     * @return 成功信息
      */
     @PostMapping
-    @ApiOperation("新增分类")
-    public Result<String> save(@RequestBody CategoryDTO categoryDTO){
+    public Result<String> save(@RequestBody CategoryDTO categoryDTO) {
         log.info("新增分类：{}", categoryDTO);
         categoryService.save(categoryDTO);
         return Result.success();
@@ -40,63 +40,67 @@ public class CategoryController {
 
     /**
      * 分类分页查询
+     *
      * @param categoryPageQueryDTO 分类分页查询条件
-     * @return
+     * @return 分类分页查询结果
      */
     @GetMapping("/page")
-    @ApiOperation("分类分页查询")
-    public Result<PageResult> page(CategoryPageQueryDTO categoryPageQueryDTO){
-        log.info("分页查询：{}", categoryPageQueryDTO);
+    public Result<PageResult> page(CategoryPageQueryDTO categoryPageQueryDTO) {
+        log.info("分页查询：pageNo={}, pageSize={}, name={} ,type={}",
+                categoryPageQueryDTO.getPage(), categoryPageQueryDTO.getPageSize(),
+                categoryPageQueryDTO.getName(), categoryPageQueryDTO.getType());
+
         PageResult pageResult = categoryService.pageQuery(categoryPageQueryDTO);
         return Result.success(pageResult);
     }
 
     /**
      * 删除分类
+     *
      * @param id 分类id
-     * @return
+     * @return 成功信息
      */
     @DeleteMapping
-    @ApiOperation("删除分类")
-    public Result<String> deleteById(Long id){
-        log.info("删除分类：{}", id);
+    public Result<String> deleteById(Long id) {
+        log.info("删除分类：id={}", id);
+
         categoryService.deleteById(id);
         return Result.success();
     }
 
     /**
      * 修改分类
+     *
      * @param categoryDTO 分类信息
-     * @return
+     * @return 成功信息
      */
     @PutMapping
-    @ApiOperation("修改分类")
-    public Result<String> update(@RequestBody CategoryDTO categoryDTO){
+    public Result<String> update(@RequestBody CategoryDTO categoryDTO) {
         categoryService.update(categoryDTO);
         return Result.success();
     }
 
     /**
      * 启用、禁用分类
+     *
      * @param status 状态
-     * @param id 分类id
-     * @return
+     * @param id     分类id
+     * @return 成功信息
      */
     @PostMapping("/status/{status}")
-    @ApiOperation("启用禁用分类")
-    public Result<String> startOrStop(@PathVariable Integer status, Long id){
-        categoryService.startOrStop(status,id);
+    public Result<String> startOrStop(@PathVariable Integer status, Long id) {
+        categoryService.startOrStop(status, id);
         return Result.success();
     }
 
     /**
      * 根据类型查询分类
+     *
      * @param type 类型
-     * @return
+     * @return 分类列表
      */
     @GetMapping("/list")
-    @ApiOperation("根据类型查询分类")
-    public Result<List<Category>> list(Integer type){
+    public Result<List<Category>> list(Integer type) {
         List<Category> list = categoryService.list(type);
         return Result.success(list);
     }

@@ -36,6 +36,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 新增分类
+     *
      * @param categoryDTO 分类信息
      */
     @Override
@@ -47,44 +48,42 @@ public class CategoryServiceImpl implements CategoryService {
         //分类状态默认为禁用状态0
         category.setStatus(StatusConstant.DISABLE);
 
-        //设置创建时间、修改时间、创建人、修改人
-//        category.setCreateTime(LocalDateTime.now());
-//        category.setUpdateTime(LocalDateTime.now());
-//        category.setCreateUser(BaseContext.getCurrentId());
-//        category.setUpdateUser(BaseContext.getCurrentId());
-
+        // 插入
         categoryMapper.insert(category);
     }
 
     /**
      * 分页查询
+     *
      * @param categoryPageQueryDTO 分类分页查询条件
      * @return 分类分页查询结果
      */
     @Override
     public PageResult pageQuery(CategoryPageQueryDTO categoryPageQueryDTO) {
-        PageHelper.startPage(categoryPageQueryDTO.getPage(),categoryPageQueryDTO.getPageSize());
-        //下一条sql进行分页，自动加入limit关键字分页
+        // 开启分页：page页码，pageSize每页条数
+        PageHelper.startPage(categoryPageQueryDTO.getPage(), categoryPageQueryDTO.getPageSize());
+        // 下一条执行的SQL自动拼接 limit ?,?
         Page<Category> page = categoryMapper.pageQuery(categoryPageQueryDTO);
         return new PageResult(page.getTotal(), page.getResult());
     }
 
     /**
      * 根据id删除分类
-      * @param id 分类id
+     *
+     * @param id 分类id
      */
     @Override
     public void deleteById(Long id) {
         //查询当前分类是否关联了菜品，如果关联了就抛出业务异常
         Integer count = dishMapper.countByCategoryId(id);
-        if(count > 0){
+        if (count > 0) {
             //当前分类下有菜品，不能删除
             throw new DeletionNotAllowedException(MessageConstant.CATEGORY_BE_RELATED_BY_DISH);
         }
 
         //查询当前分类是否关联了套餐，如果关联了就抛出业务异常
         count = setmealMapper.countByCategoryId(id);
-        if(count > 0){
+        if (count > 0) {
             //当前分类下有菜品，不能删除
             throw new DeletionNotAllowedException(MessageConstant.CATEGORY_BE_RELATED_BY_SETMEAL);
         }
@@ -95,24 +94,22 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 修改分类
-      * @param categoryDTO 分类信息
+     *
+     * @param categoryDTO 分类信息
      */
     @Override
     public void update(CategoryDTO categoryDTO) {
         Category category = new Category();
-        BeanUtils.copyProperties(categoryDTO,category);
-
-        //设置修改时间、修改人
-//        category.setUpdateTime(LocalDateTime.now());
-//        category.setUpdateUser(BaseContext.getCurrentId());
+        BeanUtils.copyProperties(categoryDTO, category);
 
         categoryMapper.update(category);
     }
 
     /**
      * 启用、禁用分类
+     *
      * @param status 分类状态
-     * @param id 分类id
+     * @param id     分类id
      */
     @Override
     public void startOrStop(Integer status, Long id) {
@@ -127,7 +124,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 根据类型查询分类
-      * @param type 分类类型
+     *
+     * @param type 分类类型
      * @return 分类列表
      */
     @Override

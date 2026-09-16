@@ -73,7 +73,7 @@ public class AutoFillAspect {
                         .getMethod(AutoFillConstant.SET_UPDATE_USER, Long.class)
                         .invoke(entity, currentId);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.info("AutoFillAspect 在INSERT自动填充失败 错误：{}", e.getMessage());
             }
         } else if (operationType == OperationType.UPDATE) {
             try {
@@ -86,7 +86,7 @@ public class AutoFillAspect {
                         .getMethod(AutoFillConstant.SET_UPDATE_USER, Long.class)
                         .invoke(entity, currentId);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.info("AutoFillAspect 在UPDATE自动填充失败 错误：{}", e.getMessage());
             }
         }
     }
