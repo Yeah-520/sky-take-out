@@ -11,6 +11,15 @@ import java.util.List;
 public interface DishService {
 
     /**
+     * 条件查询菜品和口味
+     *
+     * @param dish 菜品
+     * @return 菜品和口味信息
+     */
+    List<DishVO> listWithFlavor(Dish dish);
+
+
+    /**
      * 新增菜品，同时保存对应的口味数据
      */
     void saveWithFlavor(DishDTO dishDTO);
