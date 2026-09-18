@@ -132,7 +132,7 @@ public class SetmealImpl implements SetmealService {
                 .id(id)
                 .status(status)
                 .build();
-        setmealMapper.update(setmeal);
+        setmealMapper.updateStatus(setmeal);
     }
 
     /**

@@ -67,6 +67,14 @@ public interface SetmealMapper {
     void update(Setmeal setmeal);
 
     /**
+     * 根据id更新套餐状态
+     *
+     * @param setmeal 套餐信息
+     */
+    @Update("update setmeal set status = #{status} where id = #{id}")
+    void updateStatus(Setmeal setmeal);
+
+    /**
      * 动态条件查询套餐
      *
      * @param setmeal 套餐信息
