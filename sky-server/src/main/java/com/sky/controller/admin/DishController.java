@@ -117,6 +117,13 @@ public class DishController {
         return Result.success(dishService.list(categoryId));
     }
 
+    /**
+     * 根据id修改菜品状态
+     *
+     * @param status 状态
+     * @param id     菜品id
+     * @return 修改结果
+     */
     @PostMapping("/status/{status}")
     public Result<String> updateStatus(@PathVariable Integer status, Long id) {
         log.info("修改菜品状态，status:{}, id:{}", status, id);
