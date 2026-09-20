@@ -31,6 +31,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     /**
      * 添加购物车
+     *
      * @param shoppingCartDTO 购物车数据传输对象
      */
     @Override
@@ -69,5 +70,19 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         shoppingCart.setCreateTime(LocalDateTime.now());
 
         shoppingCartMapper.insert(shoppingCart);
+    }
+
+    /**
+     * 查询购物车
+     *
+     * @return 购物车列表
+     */
+    @Override
+    public List<ShoppingCart> list() {
+        ShoppingCart shoppingCart = ShoppingCart.builder()
+                .userId(BaseContext.getCurrentId())
+                .build();
+        return shoppingCartMapper.list(shoppingCart);
+
     }
 }
