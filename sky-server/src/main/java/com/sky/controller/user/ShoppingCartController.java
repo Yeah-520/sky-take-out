@@ -34,11 +34,24 @@ public class ShoppingCartController {
 
     /**
      * 购物车列表
+     *
      * @return 购物车列表
      */
     @GetMapping("/list")
     public Result<List<ShoppingCart>> list() {
         log.info("查询购物车列表");
         return Result.success(shoppingCartService.list());
+    }
+
+    /**
+     * 清空购物车
+     *
+     * @return 清空购物车结果
+     */
+    @DeleteMapping("/clean")
+    public Result<String> clean() {
+        log.info("清空购物车");
+        shoppingCartService.cleanShoppingCart();
+        return Result.success();
     }
 }
