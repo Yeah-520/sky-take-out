@@ -9,12 +9,14 @@ public interface ShoppingCartService {
 
     /**
      * 添加购物车
+     *
      * @param shoppingCartDTO 购物车数据传输对象
      */
     void addShoppingCart(ShoppingCartDTO shoppingCartDTO);
 
     /**
      * 购物车列表
+     *
      * @return 购物车列表
      */
     List<ShoppingCart> list();
@@ -24,4 +26,10 @@ public interface ShoppingCartService {
      */
     void cleanShoppingCart();
 
+    /**
+     * 删除购物车
+     *
+     * @param shoppingCartDTO 购物车数据传输对象
+     */
+    void deleteShoppingCart(ShoppingCartDTO shoppingCartDTO);
 }

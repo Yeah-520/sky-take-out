@@ -39,13 +39,13 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         ShoppingCart shoppingCart = new ShoppingCart();
         BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
         shoppingCart.setUserId(BaseContext.getCurrentId());
-
         List<ShoppingCart> shoppingCartList = shoppingCartMapper.list(shoppingCart);
         // 判断当前加入购物车的菜品是否已经存在
         if (!shoppingCartList.isEmpty()) {
             // 如果存在，则数量加一
             ShoppingCart cart = shoppingCartList.get(0);
             cart.setNumber(cart.getNumber() + 1);
+            shoppingCart.setAmount(cart.getAmount());
             shoppingCartMapper.updateNumberById(cart);
         } else {
             // 如果不存在，则新增
@@ -59,17 +59,18 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             } else {
                 // 本次加入购物车的套餐
                 Long setmealId = shoppingCartDTO.getSetmealId();
+
                 Setmeal setmeal = setmealMapper.getById(setmealId);
                 shoppingCart.setName(setmeal.getName());
                 shoppingCart.setImage(setmeal.getImage());
                 shoppingCart.setAmount(setmeal.getPrice());
 
             }
-        }
-        shoppingCart.setNumber(1);
-        shoppingCart.setCreateTime(LocalDateTime.now());
+            shoppingCart.setNumber(1);
+            shoppingCart.setCreateTime(LocalDateTime.now());
 
-        shoppingCartMapper.insert(shoppingCart);
+            shoppingCartMapper.insert(shoppingCart);
+        }
     }
 
     /**
@@ -93,6 +94,29 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     public void cleanShoppingCart() {
         Long userId = BaseContext.getCurrentId();
         shoppingCartMapper.deleteByUserId(userId);
+
+    }
+
+    /**
+     * 删除购物车
+     *
+     * @param shoppingCartDTO 购物车数据传输对象
+     */
+    @Override
+    public void deleteShoppingCart(ShoppingCartDTO shoppingCartDTO) {
+        ShoppingCart shoppingCart = new ShoppingCart();
+        BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
+        shoppingCart.setUserId(BaseContext.getCurrentId());
+
+        ShoppingCart cart = shoppingCartMapper.getByUserIdAndDishIdOrSetmealId(shoppingCart);
+        BeanUtils.copyProperties(cart, shoppingCart);
+
+        if (shoppingCart.getNumber() > 1) {
+            shoppingCart.setNumber(shoppingCart.getNumber() - 1);
+            shoppingCartMapper.updateNumberById(shoppingCart);
+        } else {
+            shoppingCartMapper.delete(shoppingCart);
+        }
 
     }
 }
