@@ -17,6 +17,7 @@ public interface OrderService {
 
     /**
      * 订单支付
+     *
      * @param ordersPaymentDTO
      * @return
      */
@@ -24,8 +25,17 @@ public interface OrderService {
 
     /**
      * 支付成功，修改订单状态
+     *
      * @param outTradeNo
      */
     void paySuccess(String outTradeNo);
+
+    /**
+     * 虚假的支付成功，手动修改数据库内容：order表的付款字段相关内容
+     *
+     * @param outTradeNo 订单号
+     */
+    void paySuccess(String outTradeNo, boolean isFake);
+
 
 }

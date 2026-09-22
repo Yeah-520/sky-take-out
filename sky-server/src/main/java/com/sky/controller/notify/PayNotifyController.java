@@ -11,6 +11,7 @@ import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
@@ -32,7 +33,7 @@ public class PayNotifyController {
     /**
      * 支付成功回调
      *
-      * @param request 支付回调请求
+     * @param request 支付回调请求
      */
     @RequestMapping("/paySuccess")
     public void paySuccessNotify(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -51,8 +52,10 @@ public class PayNotifyController {
         log.info("商户平台订单号：{}", outTradeNo);
         log.info("微信支付交易号：{}", transactionId);
 
-        //业务处理，修改订单状态、来单提醒
-        orderService.paySuccess(outTradeNo);
+        // 业务处理，修改订单状态、来单提醒
+        //orderService.paySuccess(outTradeNo);
+        // TODO 待完善，目前未注册微信支付
+        orderService.paySuccess(outTradeNo,true);
 
         //给微信响应
         responseToWeixin(response);
@@ -102,9 +105,10 @@ public class PayNotifyController {
 
     /**
      * 给微信响应
+     *
      * @param response 响应对象
      */
-    private void responseToWeixin(HttpServletResponse response) throws Exception{
+    private void responseToWeixin(HttpServletResponse response) throws Exception {
         response.setStatus(200);
         HashMap<Object, Object> map = new HashMap<>();
         map.put("code", "SUCCESS");
