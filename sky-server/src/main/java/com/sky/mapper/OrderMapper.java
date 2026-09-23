@@ -1,5 +1,7 @@
 package com.sky.mapper;
 
+import com.github.pagehelper.Page;
+import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -32,4 +34,11 @@ public interface OrderMapper {
     @Update("update orders set `status` = #{status}, pay_status=#{payStatus},checkout_time=#{checkoutTime} where id = #{id}")
     void fakeUpdate(Orders orders);
 
+    /**
+     * 根据条件查询订单
+     *
+     * @param ordersPageQueryDTO 订单查询条件
+     * @return 订单列表
+     */
+    Page<Orders> conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
 }

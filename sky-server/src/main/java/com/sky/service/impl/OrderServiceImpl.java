@@ -1,6 +1,8 @@
 package com.sky.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.*;
@@ -9,6 +11,7 @@ import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
 import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.*;
+import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
@@ -107,8 +110,8 @@ public class OrderServiceImpl implements OrderService {
     /**
      * 订单支付
      *
-     * @param ordersPaymentDTO
-     * @return
+     * @param ordersPaymentDTO 订单支付参数
+     * @return 订单支付结果
      */
     @Override
     public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception {
@@ -187,6 +190,24 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.fakeUpdate(orders);
+    }
+
+    /**
+     * 根据条件查询订单
+     *
+     * @param ordersPageQueryDTO 订单查询条件
+     * @return 订单分页查询结果
+     */
+    @Override
+    public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) {
+        PageHelper.startPage(
+                ordersPageQueryDTO.getPage(),
+                ordersPageQueryDTO.getPageSize()
+        );
+
+        Page<Orders> page = orderMapper.conditionSearch(ordersPageQueryDTO);
+
+        return new PageResult(page.getTotal(), page.getResult());
     }
 
 }
