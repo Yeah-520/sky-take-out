@@ -1,5 +1,6 @@
 package com.sky.service;
 
+import com.sky.dto.OrdersCancelDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
@@ -48,4 +49,10 @@ public interface OrderService {
      */
     PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
 
+    /**
+     * 取消订单
+     *
+     * @param ordersCancelDTO 订单取消参数
+     */
+    void cancelOrder(OrdersCancelDTO ordersCancelDTO);
 }

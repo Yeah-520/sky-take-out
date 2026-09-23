@@ -140,6 +140,7 @@ public class OrderServiceImpl implements OrderService {
         }
         OrderPaymentVO vo = jsonObject.toJavaObject(OrderPaymentVO.class);
         vo.setPackageStr(jsonObject.getString("package"));
+        paySuccess(ordersPaymentDTO.getOrderNumber(), true);
         return vo;
     }
 
@@ -208,6 +209,14 @@ public class OrderServiceImpl implements OrderService {
         Page<Orders> page = orderMapper.conditionSearch(ordersPageQueryDTO);
 
         return new PageResult(page.getTotal(), page.getResult());
+    }
+
+    @Override
+    public void cancelOrder(OrdersCancelDTO ordersCancelDTO) {
+        Orders orders = new Orders();
+        orders = orderMapper.getById(ordersCancelDTO.getId());
+
+        orderMapper.cancelOrder(ordersCancelDTO.getId());
     }
 
 }

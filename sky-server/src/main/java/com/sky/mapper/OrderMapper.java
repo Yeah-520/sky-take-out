@@ -3,6 +3,7 @@ package com.sky.mapper;
 import com.github.pagehelper.Page;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -31,7 +32,7 @@ public interface OrderMapper {
      */
     void update(Orders orders);
 
-    @Update("update orders set `status` = #{status}, pay_status=#{payStatus},checkout_time=#{checkoutTime} where id = #{id}")
+    @Update("update orders set status = #{status}, pay_status=#{payStatus},checkout_time=#{checkoutTime} where id = #{id}")
     void fakeUpdate(Orders orders);
 
     /**
@@ -41,4 +42,10 @@ public interface OrderMapper {
      * @return 订单列表
      */
     Page<Orders> conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
+
+    @Delete("delete from orders where id = #{id}")
+    void cancelOrder(Long id);
+
+    @Select("select * from orders where id = #{id}")
+    Orders getById(Long id);
 }

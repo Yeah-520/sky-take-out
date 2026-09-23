@@ -1,5 +1,6 @@
 package com.sky.controller.admin;
 
+import com.sky.dto.OrdersCancelDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
@@ -7,6 +8,7 @@ import com.sky.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,5 +31,13 @@ public class OrderController {
         log.info("条件查询订单");
         PageResult pageResult = orderService.conditionSearch(ordersPageQueryDTO);
         return Result.success(pageResult);
+    }
+
+    @PutMapping("/cancel")
+    public Result<String> cancelOrder(OrdersCancelDTO ordersCancelDTO) {
+        log.info("取消订单");
+        orderService.cancelOrder(ordersCancelDTO);
+        log.info("取消订单成功");
+        return Result.success();
     }
 }
