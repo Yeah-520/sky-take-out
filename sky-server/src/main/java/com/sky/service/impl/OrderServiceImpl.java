@@ -225,6 +225,7 @@ public class OrderServiceImpl implements OrderService {
         // 待付款、待派送、派送中、已完成状态可以进行取消操作，进行取消操作需要选择取消原因
         // TODO 还需补充退款操作
         if (orders.getStatus() == Orders.PENDING_PAYMENT || orders.getStatus() == Orders.TO_BE_CONFIRMED || orders.getStatus() == Orders.DELIVERY_IN_PROGRESS || orders.getStatus() == Orders.COMPLETED) {
+            orders.setId(ordersCancelDTO.getId());
             orders.setCancelReason(ordersCancelDTO.getCancelReason());
             orders.setCancelTime(LocalDateTime.now());
             orders.setStatus(Orders.CANCELLED);
@@ -295,6 +296,24 @@ public class OrderServiceImpl implements OrderService {
         Orders orders = new Orders();
         orders.setId(id);
         orders.setStatus(Orders.DELIVERY_IN_PROGRESS);
+        orderMapper.update(orders);
+    }
+
+    /**
+     * 拒绝订单
+     *
+     * @param ordersRejectionDTO 拒绝订单参数
+     */
+    @Override
+    public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
+        Orders orders = Orders.builder()
+                .id(ordersRejectionDTO.getId())
+                .status(Orders.CANCELLED)
+                .rejectionReason(ordersRejectionDTO.getRejectionReason())
+                .cancelReason(ordersRejectionDTO.getRejectionReason())
+                .cancelTime(LocalDateTime.now())
+                .build();
+
         orderMapper.update(orders);
     }
 

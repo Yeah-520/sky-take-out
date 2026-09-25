@@ -52,7 +52,7 @@ public interface OrderMapper {
      *
      * @param orders 订单信息
      */
-    @Update("update orders set status = #{status},checkout_time = #{checkoutTime},cancel_reason = #{cancelReason} where id = #{id}")
+    @Update("update orders set status = #{status},cancel_time = #{cancelTime},cancel_reason = #{cancelReason} where id = #{id}")
     void cancelOrder(Orders orders);
 
     /**
