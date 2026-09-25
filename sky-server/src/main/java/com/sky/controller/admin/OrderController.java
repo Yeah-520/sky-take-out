@@ -7,10 +7,7 @@ import com.sky.result.Result;
 import com.sky.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/admin/order")
@@ -34,7 +31,7 @@ public class OrderController {
     }
 
     @PutMapping("/cancel")
-    public Result<String> cancelOrder(OrdersCancelDTO ordersCancelDTO) {
+    public Result<String> cancelOrder(@RequestBody OrdersCancelDTO ordersCancelDTO) {
         log.info("取消订单");
         orderService.cancelOrder(ordersCancelDTO);
         log.info("取消订单成功");

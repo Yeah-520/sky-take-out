@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -213,10 +214,18 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void cancelOrder(OrdersCancelDTO ordersCancelDTO) {
-        Orders orders = new Orders();
-        orders = orderMapper.getById(ordersCancelDTO.getId());
-
-        orderMapper.cancelOrder(ordersCancelDTO.getId());
+        Orders orders = orderMapper.getById(ordersCancelDTO.getId());
+        // 待付款、待派送、派送中、已完成状态可以进行取消操作，进行取消操作需要选择取消原因
+        // TODO 还需补充退款操作
+        if (orders.getStatus() == Orders.PENDING_PAYMENT || orders.getStatus() == Orders.TO_BE_CONFIRMED || orders.getStatus() == Orders.DELIVERY_IN_PROGRESS || orders.getStatus() == Orders.COMPLETED) {
+            orders.setCancelReason(ordersCancelDTO.getCancelReason());
+            orders.setCancelTime(LocalDateTime.now());
+            orders.setStatus(Orders.CANCELLED);
+            orderMapper.cancelOrder(orders);
+            log.info("等待退款，订单号：{}", orders.getNumber());
+        } else {
+            log.error("错误：订单状态不允许取消");
+        }
     }
 
 }

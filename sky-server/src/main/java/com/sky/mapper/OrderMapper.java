@@ -43,9 +43,18 @@ public interface OrderMapper {
      */
     Page<Orders> conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
 
-    @Delete("delete from orders where id = #{id}")
-    void cancelOrder(Long id);
+    /**
+     * 取消订单
+     * @param orders 订单信息
+     */
+    @Update("update orders set status = #{status},checkout_time = #{checkoutTime},cancel_reason = #{cancelReason} where id = #{id}")
+    void cancelOrder(Orders orders);
 
+    /**
+     * 根据id查询订单
+      * @param id 订单id
+      * @return 订单信息
+     */
     @Select("select * from orders where id = #{id}")
     Orders getById(Long id);
 }
