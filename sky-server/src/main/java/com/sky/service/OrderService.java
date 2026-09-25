@@ -78,4 +78,11 @@ public interface OrderService {
      * @param id 订单id
      */
     void confirmOrder(Long id);
+
+    /**
+     * 准备派送，修改订单状态
+     *
+     * @param id 订单id
+     */
+    void delivery(Long id);
 }

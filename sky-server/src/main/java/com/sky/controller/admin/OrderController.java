@@ -88,4 +88,18 @@ public class OrderController {
         log.info("确认订单成功");
         return Result.success();
     }
+
+    /**
+     * 派送订单
+     *
+     * @param id 订单id
+     * @return 操作结果
+     */
+    @PutMapping("/delivery/{id}")
+    public Result<String> delivery(@PathVariable Long id) {
+        log.info("准备派送，订单id：{}", id);
+        orderService.delivery(id);
+        log.info("派送中，订单id：{}", id);
+        return Result.success();
+    }
 }
