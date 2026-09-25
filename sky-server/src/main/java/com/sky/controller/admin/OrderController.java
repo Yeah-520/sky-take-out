@@ -36,6 +36,7 @@ public class OrderController {
 
     /**
      * 取消订单
+     *
      * @param ordersCancelDTO 订单取消参数
      * @return 操作结果
      */
@@ -49,6 +50,7 @@ public class OrderController {
 
     /**
      * 查询订单详情
+     *
      * @param id 订单id
      * @return 订单详情
      */
@@ -58,5 +60,17 @@ public class OrderController {
         OrderVO orderVO = orderService.details(id);
         return Result.success(orderVO);
 
+    }
+
+    /**
+     * 查询订单统计
+     *
+     * @return 订单统计结果
+     */
+    @GetMapping("/statistics")
+    public Result<OrderStatisticsVO> getStatistics() {
+        log.info("查询订单统计");
+        OrderStatisticsVO orderStatisticsVO = orderService.getStatistics();
+        return Result.success(orderStatisticsVO);
     }
 }

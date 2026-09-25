@@ -15,6 +15,7 @@ import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
+import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
@@ -215,6 +216,7 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 取消订单
+     *
      * @param ordersCancelDTO 订单取消参数
      */
     @Override
@@ -235,6 +237,7 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 根据id查询订单
+     *
      * @param id 订单id
      * @return 订单详情
      */
@@ -248,6 +251,24 @@ public class OrderServiceImpl implements OrderService {
         BeanUtils.copyProperties(orders, orderVO);
         orderVO.setOrderDetailList(orderDetailList);
         return orderVO;
+    }
+
+    /**
+     * 获取订单统计信息
+     * @return 订单统计信息
+     */
+    @Override
+    public OrderStatisticsVO getStatistics() {
+        // 待派送数量 派送中数量 待接单数量
+        Integer toBeConfirmed = orderMapper.getStatistics(Orders.TO_BE_CONFIRMED);
+        Integer deliveryInProgress = orderMapper.getStatistics(Orders.DELIVERY_IN_PROGRESS);
+        Integer confirmed = orderMapper.getStatistics(Orders.CONFIRMED);
+
+        return OrderStatisticsVO.builder()
+                .toBeConfirmed(toBeConfirmed)
+                .confirmed(confirmed)
+                .deliveryInProgress(deliveryInProgress)
+                .build();
     }
 
 }
