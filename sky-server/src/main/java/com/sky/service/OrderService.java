@@ -59,6 +59,7 @@ public interface OrderService {
 
     /**
      * 根据id查询订单
+     *
      * @param id 订单id
      * @return 订单详情
      */
@@ -66,7 +67,15 @@ public interface OrderService {
 
     /**
      * 获取订单统计信息
+     *
      * @return 订单统计信息
      */
     OrderStatisticsVO getStatistics();
+
+    /**
+     * 确认订单
+     *
+     * @param id 订单id
+     */
+    void confirmOrder(Long id);
 }

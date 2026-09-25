@@ -255,6 +255,7 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 获取订单统计信息
+     *
      * @return 订单统计信息
      */
     @Override
@@ -269,6 +270,19 @@ public class OrderServiceImpl implements OrderService {
                 .confirmed(confirmed)
                 .deliveryInProgress(deliveryInProgress)
                 .build();
+    }
+
+    /**
+     * 确认订单
+     *
+     * @param id 订单id
+     */
+    @Override
+    public void confirmOrder(Long id) {
+        Orders orders = new Orders();
+        orders.setId(id);
+        orders.setStatus(Orders.CONFIRMED);
+        orderMapper.update(orders);
     }
 
 }
