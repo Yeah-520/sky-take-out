@@ -117,4 +117,18 @@ public class OrderController {
         log.info("拒绝订单成功");
         return Result.success();
     }
+
+    /**
+     * 完成订单
+     *
+     * @param id 订单id
+     * @return 操作结果
+     */
+    @PutMapping("/complete/{id}")
+    public Result<String> complete(@PathVariable Long id) {
+        log.info("完成订单");
+        orderService.completeOrder(id);
+        log.info("完成订单成功");
+        return Result.success();
+    }
 }
