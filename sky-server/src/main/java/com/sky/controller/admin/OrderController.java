@@ -2,9 +2,13 @@ package com.sky.controller.admin;
 
 import com.sky.dto.OrdersCancelDTO;
 import com.sky.dto.OrdersPageQueryDTO;
+import com.sky.entity.Orders;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.OrderService;
+import com.sky.vo.OrderStatisticsVO;
+import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -30,11 +34,29 @@ public class OrderController {
         return Result.success(pageResult);
     }
 
+    /**
+     * 取消订单
+     * @param ordersCancelDTO 订单取消参数
+     * @return 操作结果
+     */
     @PutMapping("/cancel")
     public Result<String> cancelOrder(@RequestBody OrdersCancelDTO ordersCancelDTO) {
         log.info("取消订单");
         orderService.cancelOrder(ordersCancelDTO);
         log.info("取消订单成功");
         return Result.success();
+    }
+
+    /**
+     * 查询订单详情
+     * @param id 订单id
+     * @return 订单详情
+     */
+    @GetMapping("/details/{id}")
+    public Result<OrderVO> getOrderDetails(@PathVariable Long id) {
+        log.info("查询订单详情");
+        OrderVO orderVO = orderService.details(id);
+        return Result.success(orderVO);
+
     }
 }

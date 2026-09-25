@@ -32,6 +32,11 @@ public interface OrderMapper {
      */
     void update(Orders orders);
 
+    /**
+     * 订单信息修改
+     *
+     * @param orders 订单信息
+     */
     @Update("update orders set status = #{status}, pay_status=#{payStatus},checkout_time=#{checkoutTime} where id = #{id}")
     void fakeUpdate(Orders orders);
 
@@ -45,6 +50,7 @@ public interface OrderMapper {
 
     /**
      * 取消订单
+     *
      * @param orders 订单信息
      */
     @Update("update orders set status = #{status},checkout_time = #{checkoutTime},cancel_reason = #{cancelReason} where id = #{id}")
@@ -52,8 +58,9 @@ public interface OrderMapper {
 
     /**
      * 根据id查询订单
-      * @param id 订单id
-      * @return 订单信息
+     *
+     * @param id 订单id
+     * @return 订单信息
      */
     @Select("select * from orders where id = #{id}")
     Orders getById(Long id);

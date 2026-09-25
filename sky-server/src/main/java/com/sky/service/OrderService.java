@@ -7,6 +7,7 @@ import com.sky.dto.OrdersSubmitDTO;
 import com.sky.result.PageResult;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
 
 public interface OrderService {
 
@@ -40,7 +41,6 @@ public interface OrderService {
      */
     void paySuccess(String outTradeNo, boolean isFake);
 
-
     /**
      * 条件查询订单
      *
@@ -55,4 +55,11 @@ public interface OrderService {
      * @param ordersCancelDTO 订单取消参数
      */
     void cancelOrder(OrdersCancelDTO ordersCancelDTO);
+
+    /**
+     * 根据id查询订单
+     * @param id 订单id
+     * @return 订单详情
+     */
+    OrderVO details(Long id);
 }

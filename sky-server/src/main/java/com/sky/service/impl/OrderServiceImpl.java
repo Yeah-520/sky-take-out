@@ -16,6 +16,7 @@ import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.BeanUtils;
@@ -26,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @Slf4j
@@ -212,6 +212,10 @@ public class OrderServiceImpl implements OrderService {
         return new PageResult(page.getTotal(), page.getResult());
     }
 
+    /**
+     * 取消订单
+     * @param ordersCancelDTO 订单取消参数
+     */
     @Override
     public void cancelOrder(OrdersCancelDTO ordersCancelDTO) {
         Orders orders = orderMapper.getById(ordersCancelDTO.getId());
@@ -226,6 +230,23 @@ public class OrderServiceImpl implements OrderService {
         } else {
             log.error("错误：订单状态不允许取消");
         }
+    }
+
+    /**
+     * 根据id查询订单
+     * @param id 订单id
+     * @return 订单详情
+     */
+    @Override
+    public OrderVO details(Long id) {
+        Orders orders = orderMapper.getById(id);
+
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
+
+        OrderVO orderVO = new OrderVO();
+        BeanUtils.copyProperties(orders, orderVO);
+        orderVO.setOrderDetailList(orderDetailList);
+        return orderVO;
     }
 
 }
