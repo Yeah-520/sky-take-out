@@ -103,4 +103,12 @@ public interface OrderService {
      * @return 订单历史
      */
     PageResult historyOrders(int page, int pageSize, Integer status);
+
+    /**
+     * 订单详情
+     *
+     * @param id 订单id
+     * @return 订单详情
+     */
+    OrderVO orderDetail(Long id);
 }
