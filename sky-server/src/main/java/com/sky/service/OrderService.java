@@ -96,4 +96,11 @@ public interface OrderService {
      * @param id 订单id
      */
     void completeOrder(Long id);
+
+    /**
+     * 订单历史
+     *
+     * @return 订单历史
+     */
+    PageResult historyOrders(int page, int pageSize, Integer status);
 }

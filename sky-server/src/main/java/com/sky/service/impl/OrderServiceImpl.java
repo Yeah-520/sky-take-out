@@ -331,5 +331,43 @@ public class OrderServiceImpl implements OrderService {
         orderMapper.update(orders);
     }
 
+    /**
+     * 获取订单列表
+     *
+     * @param page     页码
+     * @param pageSize 页大小
+     * @param status   订单状态
+     * @return 订单列表
+     */
+    @Override
+    public PageResult historyOrders(int page, int pageSize, Integer status) {
+        PageHelper.startPage(page, pageSize);
+
+        OrdersPageQueryDTO ordersPageQueryDTO = new OrdersPageQueryDTO();
+        ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
+        ordersPageQueryDTO.setStatus(status);
+
+        Page<Orders> pageResult = orderMapper.historyOrders(ordersPageQueryDTO);
+
+        List<OrderVO> list = new ArrayList<>();
+
+        // 查询出订单明细，并封装入OrderVO进行响应
+        if (pageResult != null && pageResult.getTotal() > 0) {
+            for (Orders orders : pageResult) {
+                Long orderId = orders.getId();// 订单id
+
+                // 查询订单明细
+                List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orderId);
+
+                OrderVO orderVO = new OrderVO();
+                BeanUtils.copyProperties(orders, orderVO);
+                orderVO.setOrderDetailList(orderDetails);
+
+                list.add(orderVO);
+            }
+        }
+
+        return new PageResult(pageResult.getTotal(), list);
+    }
 
 }
