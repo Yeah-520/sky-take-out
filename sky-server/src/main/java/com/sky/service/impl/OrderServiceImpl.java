@@ -404,4 +404,44 @@ public class OrderServiceImpl implements OrderService {
         orderMapper.cancelOrder(orders);
     }
 
+    /**
+     * 重复下单
+     *
+     * @param id 订单id
+     */
+    @Override
+    @Transactional
+    public void repetition(Long id) {
+        Orders order = orderMapper.getById(id);
+        Long orderId = order.getId();
+
+        // 对Orders表进行更新，设置订单状态为待支付
+        order.setId(null);
+        order.setOrderTime(LocalDateTime.now());
+        order.setCheckoutTime(null);
+        order.setPayStatus(Orders.UN_PAID);
+        order.setCancelReason(null);
+        order.setRejectionReason(null);
+        order.setCancelTime(null);
+        order.setDeliveryTime(null);
+        order.setStatus(Orders.PENDING_PAYMENT);
+
+        orderMapper.insert(order);
+
+        Long newOrderId = order.getId();
+        // 对orders_details表进行更新
+        List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orderId);
+
+        List<OrderDetail> orderDetailList = new ArrayList<>();
+        // 向订单明细表插入数据
+        for (OrderDetail orderDetail : orderDetails) {
+            OrderDetail newOrderDetail = new OrderDetail();
+            BeanUtils.copyProperties(orderDetail, newOrderDetail);
+            newOrderDetail.setOrderId(newOrderId);
+            orderDetailList.add(newOrderDetail);
+        }
+
+        orderDetailMapper.insertBatch(orderDetailList);
+    }
+
 }
