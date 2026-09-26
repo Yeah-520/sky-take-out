@@ -111,4 +111,11 @@ public interface OrderService {
      * @return 订单详情
      */
     OrderVO orderDetail(Long id);
+
+    /**
+     * 用户取消订单
+     *
+     * @param id 订单id
+     */
+    void userCancel(Long id);
 }

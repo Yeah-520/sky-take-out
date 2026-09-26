@@ -388,4 +388,20 @@ public class OrderServiceImpl implements OrderService {
         return orderVO;
     }
 
+    /**
+     * 用户取消订单
+     *
+     * @param id 订单id
+     */
+    @Override
+    public void userCancel(Long id) {
+        Orders orders = Orders.builder()
+                .id(id)
+                .status(Orders.CANCELLED)
+                .cancelTime(LocalDateTime.now())
+                .cancelReason("用户取消")
+                .build();
+        orderMapper.cancelOrder(orders);
+    }
+
 }
