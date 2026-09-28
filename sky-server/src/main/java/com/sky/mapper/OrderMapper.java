@@ -3,13 +3,13 @@ package com.sky.mapper;
 import com.github.pagehelper.Page;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
-import com.sky.vo.OrderVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface OrderMapper {
@@ -98,11 +98,19 @@ public interface OrderMapper {
     /**
      * 修改订单状态
      *
-     * @param orderStatus
-     * @param orderPaidStatus
-     * @param check_out_time
-     * @param id
+     * @param orderStatus     订单状态
+     * @param orderPaidStatus 订单支付状态
+     * @param check_out_time  订单checkout时间
+     * @param id              订单id
      */
     @Update("update orders set status = #{orderStatus},pay_status = #{orderPaidStatus} ,checkout_time = #{check_out_time} where id = #{id}")
     void updateStatus(Integer orderStatus, Integer orderPaidStatus, LocalDateTime check_out_time, Long id);
+
+    /**
+     * 查询营业额
+     *
+     * @param map 查询条件
+     * @return 订单列表
+     */
+    Double sumByMap(Map<String, Object> map);
 }
