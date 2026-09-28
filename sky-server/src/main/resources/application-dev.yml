@@ -20,5 +20,5 @@ sky:
 #    privateKeyFilePath: D:\pay\apiclient_key.pem  #商户私钥文件路径
     apiV3Key: CZBK51236435wxpay435434323FFDuv3 #APIv3密钥（32位）
 #    weChatPayCertFilePath: D:\pay\wechatpay_166D96F876F45C7D07CE98952A96EC980368ACFC.pem #微信平台公钥证书路径
-    notifyUrl: https://6619cf50.r6.cpolar.to/notify/paySuccess #支付成功回调地址
-    refundNotifyUrl: https://6619cf50.r6.cpolar.top/notify/refundSuccess #退款回调地址
+    notifyUrl: https://1bda3dad.r39.cpolar.top/notify/paySuccess #支付成功回调地址
+    refundNotifyUrl: https://1bda3dad.r39.cpolar.top/notify/refundSuccess #退款回调地址
