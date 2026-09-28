@@ -113,4 +113,12 @@ public interface OrderMapper {
      * @return 订单列表
      */
     Double sumByMap(Map<String, Object> map);
+
+    /**
+     * 根据条件查询订单数量
+     *
+     * @param map 查询条件
+     * @return 订单数量
+     */
+    Integer countByMap(Map<String, Object> map);
 }
