@@ -115,8 +115,17 @@ public class OrderServiceImpl implements OrderService {
      * @param ordersPaymentDTO 订单支付参数
      * @return 订单支付结果
      */
+    @Transactional
     @Override
     public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) {
+
+        Orders user = orderMapper.getByNumber(ordersPaymentDTO.getOrderNumber());
+        Long userId = user.getUserId();
+
+        if (BaseContext.getCurrentId().equals(userId)) {
+            log.error("错误：用户信息不匹配");
+            throw new OrderBusinessException(MessageConstant.USER_INFO_MISMATCH);
+        }
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("code", "ORDERPAID");
