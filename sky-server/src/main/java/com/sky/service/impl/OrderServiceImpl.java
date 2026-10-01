@@ -413,7 +413,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 重复下单
+     * 再来一单
      *
      * @param id 订单id
      */
@@ -425,6 +425,8 @@ public class OrderServiceImpl implements OrderService {
 
         // 对Orders表进行更新，设置订单状态为待支付
         order.setId(null);
+        // TODO 并发重复问题
+        order.setNumber(String.valueOf(System.currentTimeMillis()));
         order.setOrderTime(LocalDateTime.now());
         order.setCheckoutTime(null);
         order.setPayStatus(Orders.UN_PAID);
