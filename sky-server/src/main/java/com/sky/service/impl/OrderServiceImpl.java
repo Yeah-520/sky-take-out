@@ -41,16 +41,11 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private ShoppingCartMapper shoppingCartMapper;
     @Autowired
-    private UserMapper userMapper;
-    @Autowired
     private AddressBookMapper addressBookMapper;
     @Autowired
     private WeChatPayUtil weChatPayUtil;
     @Autowired
     private WebSocketServer webSocketServer;
-
-
-    private Orders orders;
 
     /**
      * 提交订单
@@ -90,10 +85,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setAddress(addressBook.getDetail());
         orders.setUserId(userId);
 
-        this.orders = orders;
-
         orderMapper.insert(orders);
-
 
         List<OrderDetail> orderDetailList = new ArrayList<>();
         // 向订单明细表插入数据
@@ -124,34 +116,7 @@ public class OrderServiceImpl implements OrderService {
      * @return 订单支付结果
      */
     @Override
-    public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception {
-
-        // 当前登录用户id
-        Long userId = BaseContext.getCurrentId();
-        User user = userMapper.getById(userId);
-//
-//        // 模拟数据
-//        String timeStamp = String.valueOf(System.currentTimeMillis() / 1000);
-//        String nonceStr = RandomStringUtils.randomNumeric(32);
-//
-//        // 这两个很复杂没法模拟，在前端支付部分跳过验证了，这里写全了为了不爆红
-//        String prepayId = "1111111111";
-//        String packageSign = "fakeData";
-//        JSONObject jsonObject = new JSONObject();
-//        jsonObject.put("timeStamp", timeStamp);
-//        jsonObject.put("nonceStr", nonceStr);
-//        jsonObject.put("package", "prepay_id=" + prepayId);
-//        jsonObject.put("signType", "RSA");
-//        jsonObject.put("paySign", packageSign);
-//        jsonObject.put("code", "FAKEPAID");
-//
-//        if (jsonObject.getString("code") != null && jsonObject.getString("code").equals("ORDERPAID")) {
-//            throw new OrderBusinessException("该订单已支付");
-//        }
-//        OrderPaymentVO vo = jsonObject.toJavaObject(OrderPaymentVO.class);
-//        vo.setPackageStr(jsonObject.getString("package"));
-//        paySuccess(ordersPaymentDTO.getOrderNumber(), true);
-//
+    public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) {
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("code", "ORDERPAID");
@@ -160,12 +125,14 @@ public class OrderServiceImpl implements OrderService {
         Integer OrderPaidStatus = Orders.PAID;//支付状态，已支付
         Integer OrderStatus = Orders.TO_BE_CONFIRMED;  //订单状态，待接单
         LocalDateTime check_out_time = LocalDateTime.now();//更新支付时间
-        orderMapper.updateStatus(OrderStatus, OrderPaidStatus, check_out_time, this.orders.getId());
 
+        Orders order = orderMapper.getByNumber(ordersPaymentDTO.getOrderNumber());
+
+        orderMapper.updateStatus(OrderStatus, OrderPaidStatus, check_out_time, order.getId());
 
         //通过WebSocket向客户端浏览器推送消息 type orderId content
         Orders orders = orderMapper.getByNumber(ordersPaymentDTO.getOrderNumber());
-        Map map = new HashMap();
+        Map<String, Object> map = new HashMap<>();
         map.put("type", 1);  //1表示来单提醒 2表示客户催单
         map.put("orderId", orders.getId());
         map.put("content", "订单号：" + ordersPaymentDTO.getOrderNumber());
@@ -252,7 +219,7 @@ public class OrderServiceImpl implements OrderService {
         Orders orders = orderMapper.getById(ordersCancelDTO.getId());
         // 待付款、待派送、派送中、已完成状态可以进行取消操作，进行取消操作需要选择取消原因
         // TODO 还需补充退款操作
-        if (orders.getStatus() == Orders.PENDING_PAYMENT || orders.getStatus() == Orders.TO_BE_CONFIRMED || orders.getStatus() == Orders.DELIVERY_IN_PROGRESS || orders.getStatus() == Orders.COMPLETED) {
+        if (orders.getStatus().equals(Orders.PENDING_PAYMENT) || orders.getStatus().equals(Orders.TO_BE_CONFIRMED) || orders.getStatus().equals(Orders.DELIVERY_IN_PROGRESS) || orders.getStatus().equals(Orders.COMPLETED)) {
             orders.setId(ordersCancelDTO.getId());
             orders.setCancelReason(ordersCancelDTO.getCancelReason());
             orders.setCancelTime(LocalDateTime.now());
@@ -393,6 +360,10 @@ public class OrderServiceImpl implements OrderService {
 
                 list.add(orderVO);
             }
+        }
+
+        if (pageResult == null) {
+            throw new OrderBusinessException(MessageConstant.UNKNOWN_ERROR);
         }
 
         return new PageResult(pageResult.getTotal(), list);
