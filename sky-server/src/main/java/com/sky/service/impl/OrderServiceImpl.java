@@ -118,36 +118,30 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) {
+        String orderNumber = ordersPaymentDTO.getOrderNumber();
+        
+        Orders orders = getOwnedOrder(orderMapper.getByNumber(orderNumber).getId());
 
-        Orders user = orderMapper.getByNumber(ordersPaymentDTO.getOrderNumber());
-        Long userId = user.getUserId();
-
-        if (BaseContext.getCurrentId().equals(userId)) {
-            log.error("错误：用户信息不匹配");
-            throw new OrderBusinessException(MessageConstant.USER_INFO_MISMATCH);
+        // 验证订单状态是否为待支付
+        if (!Orders.PENDING_PAYMENT.equals(orders.getStatus())) {
+            log.warn("订单 {} 状态不是待支付状态 {}", orders.getNumber(), orders.getStatus());
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("code", "ORDERPAID");
         OrderPaymentVO vo = jsonObject.toJavaObject(OrderPaymentVO.class);
         vo.setPackageStr(jsonObject.getString("package"));
-        Integer OrderPaidStatus = Orders.PAID;//支付状态，已支付
-        Integer OrderStatus = Orders.TO_BE_CONFIRMED;  //订单状态，待接单
-        LocalDateTime check_out_time = LocalDateTime.now();//更新支付时间
 
-        Orders order = orderMapper.getByNumber(ordersPaymentDTO.getOrderNumber());
-
-        orderMapper.updateStatus(OrderStatus, OrderPaidStatus, check_out_time, order.getId());
+        orderMapper.updateStatus(Orders.TO_BE_CONFIRMED, Orders.PAID, LocalDateTime.now(), orders.getId());
 
         //通过WebSocket向客户端浏览器推送消息 type orderId content
-        Orders orders = orderMapper.getByNumber(ordersPaymentDTO.getOrderNumber());
         Map<String, Object> map = new HashMap<>();
         map.put("type", 1);  //1表示来单提醒 2表示客户催单
         map.put("orderId", orders.getId());
         map.put("content", "订单号：" + ordersPaymentDTO.getOrderNumber());
 
-        String json = JSON.toJSONString(map);
-        webSocketServer.sendToAllClient(json);
+        webSocketServer.sendToAllClient(JSON.toJSONString(map));
         return vo;
     }
 
@@ -476,4 +470,22 @@ public class OrderServiceImpl implements OrderService {
         webSocketServer.sendToAllClient(json);
     }
 
+    /**
+     * 校验订单存在且归属当前登录用户,返回订单本身
+     *
+     * @param id 订单id
+     * @return 订单对象
+     * @throws OrderBusinessException 订单不存在或归属用户不匹配
+     */
+    private Orders getOwnedOrder(Long id) {
+        Orders orders = orderMapper.getById(id);
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        if (!BaseContext.getCurrentId().equals(orders.getUserId())) {
+            log.warn("用户 {} 越权访问订单 {}", BaseContext.getCurrentId(), id);
+            throw new OrderBusinessException(MessageConstant.USER_INFO_MISMATCH);
+        }
+        return orders;
+    }
 }
