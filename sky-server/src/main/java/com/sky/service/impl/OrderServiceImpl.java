@@ -119,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) {
         String orderNumber = ordersPaymentDTO.getOrderNumber();
-        
+
         Orders orders = getOwnedOrder(orderMapper.getByNumber(orderNumber).getId());
 
         // 验证订单状态是否为待支付
@@ -227,7 +227,7 @@ public class OrderServiceImpl implements OrderService {
             orders.setCancelReason(ordersCancelDTO.getCancelReason());
             orders.setCancelTime(LocalDateTime.now());
             orders.setStatus(Orders.CANCELLED);
-            orderMapper.cancelOrder(orders);
+            orderMapper.update(orders);
             log.info("等待退款，订单号：{}", orders.getNumber());
         } else {
             log.error("错误：订单状态不允许取消");
@@ -242,7 +242,7 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public OrderVO details(Long id) {
-        Orders orders = orderMapper.getById(id);
+        Orders orders = getOwnedOrder(id);
 
         List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
 
@@ -380,7 +380,7 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public OrderVO orderDetail(Long id) {
-        Orders order = orderMapper.getById(id);
+        Orders order = getOwnedOrder(id);
 
         List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(order.getId());
 
@@ -397,13 +397,13 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void userCancel(Long id) {
-        Orders orders = Orders.builder()
-                .id(id)
-                .status(Orders.CANCELLED)
-                .cancelTime(LocalDateTime.now())
-                .cancelReason("用户取消")
-                .build();
-        orderMapper.cancelOrder(orders);
+        Orders order = getOwnedOrder(id);
+
+        order.setStatus(Orders.CANCELLED);
+        order.setCancelTime(LocalDateTime.now());
+        order.setCancelReason("用户取消");
+
+        orderMapper.update(order);
     }
 
     /**
@@ -414,8 +414,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public void repetition(Long id) {
-        Orders order = orderMapper.getById(id);
-        Long orderId = order.getId();
+        Orders order = getOwnedOrder(id);
+        Long oldOrderId = order.getId();
 
         // 对Orders表进行更新，设置订单状态为待支付
         order.setId(null);
@@ -434,7 +434,7 @@ public class OrderServiceImpl implements OrderService {
 
         Long newOrderId = order.getId();
         // 对orders_details表进行更新
-        List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orderId);
+        List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(oldOrderId);
 
         List<OrderDetail> orderDetailList = new ArrayList<>();
         // 向订单明细表插入数据

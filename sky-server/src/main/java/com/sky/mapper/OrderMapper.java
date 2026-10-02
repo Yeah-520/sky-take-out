@@ -54,14 +54,6 @@ public interface OrderMapper {
     Page<Orders> conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
 
     /**
-     * 取消订单
-     *
-     * @param orders 订单信息
-     */
-    @Update("update orders set status = #{status},cancel_time = #{cancelTime},cancel_reason = #{cancelReason} where id = #{id}")
-    void cancelOrder(Orders orders);
-
-    /**
      * 根据id查询订单
      *
      * @param id 订单id
