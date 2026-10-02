@@ -19,9 +19,10 @@ public class AddressBookServiceImpl implements AddressBookService {
     /**
      * 条件查询
      *
-     * @param addressBook
-     * @return
+     * @param addressBook 地址簿对象
+     * @return 地址簿列表
      */
+    @Override
     public List<AddressBook> list(AddressBook addressBook) {
         return addressBookMapper.list(addressBook);
     }
@@ -29,8 +30,9 @@ public class AddressBookServiceImpl implements AddressBookService {
     /**
      * 新增地址
      *
-     * @param addressBook
+     * @param addressBook 地址簿对象
      */
+    @Override
     public void save(AddressBook addressBook) {
         addressBook.setUserId(BaseContext.getCurrentId());
         addressBook.setIsDefault(0);
@@ -40,19 +42,20 @@ public class AddressBookServiceImpl implements AddressBookService {
     /**
      * 根据id查询
      *
-     * @param id
-     * @return
+     * @param id 地址簿id
+     * @return 地址簿对象
      */
+    @Override
     public AddressBook getById(Long id) {
-        AddressBook addressBook = addressBookMapper.getById(id);
-        return addressBook;
+        return addressBookMapper.getById(id, BaseContext.getCurrentId());
     }
 
     /**
      * 根据id修改地址
      *
-     * @param addressBook
+     * @param addressBook 地址簿对象
      */
+    @Override
     public void update(AddressBook addressBook) {
         addressBookMapper.update(addressBook);
     }
@@ -60,8 +63,9 @@ public class AddressBookServiceImpl implements AddressBookService {
     /**
      * 设置默认地址
      *
-     * @param addressBook
+     * @param addressBook 地址簿对象
      */
+    @Override
     @Transactional
     public void setDefault(AddressBook addressBook) {
         //1、将当前用户的所有地址修改为非默认地址 update address_book set is_default = ? where user_id = ?
@@ -77,10 +81,11 @@ public class AddressBookServiceImpl implements AddressBookService {
     /**
      * 根据id删除地址
      *
-     * @param id
+     * @param id 地址簿id
      */
+    @Override
     public void deleteById(Long id) {
-        addressBookMapper.deleteById(id);
+        addressBookMapper.deleteById(id, BaseContext.getCurrentId());
     }
 
 }
