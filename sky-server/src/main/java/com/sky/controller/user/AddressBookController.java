@@ -8,6 +8,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -35,12 +36,12 @@ public class AddressBookController {
     /**
      * 新增地址
      *
-     * @param addressBook
-     * @return
+     * @param addressBook 地址簿对象
+     * @return 新增结果
      */
     @PostMapping
     @ApiOperation("新增地址")
-    public Result save(@RequestBody AddressBook addressBook) {
+    public Result<String> save(@RequestBody AddressBook addressBook) {
         addressBookService.save(addressBook);
         return Result.success();
     }
@@ -53,14 +54,14 @@ public class AddressBookController {
     }
 
     /**
-     * 根据id修改地址
+     * 修改地址
      *
-     * @param addressBook
-     * @return
+     * @param addressBook 地址簿对象
+     * @return 修改结果
      */
     @PutMapping
     @ApiOperation("根据id修改地址")
-    public Result update(@RequestBody AddressBook addressBook) {
+    public Result<String> update(@RequestBody AddressBook addressBook) {
         addressBookService.update(addressBook);
         return Result.success();
     }
@@ -68,12 +69,12 @@ public class AddressBookController {
     /**
      * 设置默认地址
      *
-     * @param addressBook
-     * @return
+     * @param addressBook 地址簿对象
+     * @return 设置默认地址结果
      */
     @PutMapping("/default")
     @ApiOperation("设置默认地址")
-    public Result setDefault(@RequestBody AddressBook addressBook) {
+    public Result<String> setDefault(@RequestBody AddressBook addressBook) {
         addressBookService.setDefault(addressBook);
         return Result.success();
     }
@@ -81,12 +82,12 @@ public class AddressBookController {
     /**
      * 根据id删除地址
      *
-     * @param id
-     * @return
+     * @param id 地址id
+     * @return 删除结果
      */
     @DeleteMapping
     @ApiOperation("根据id删除地址")
-    public Result deleteById(Long id) {
+    public Result<String> deleteById(Long id) {
         addressBookService.deleteById(id);
         return Result.success();
     }

@@ -75,9 +75,10 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 计算订单金额
+        BigDecimal packAmount = ordersSubmitDTO.getPackAmount() == null ? BigDecimal.ZERO : BigDecimal.valueOf(ordersSubmitDTO.getPackAmount());
         BigDecimal amount = shoppingCartList.stream()
                 .map(cart -> cart.getAmount().multiply(BigDecimal.valueOf(cart.getNumber())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add).add(packAmount).add(BigDecimal.valueOf(6.0));
 
         Orders orders = new Orders();
         BeanUtils.copyProperties(ordersSubmitDTO, orders);
@@ -126,11 +127,23 @@ public class OrderServiceImpl implements OrderService {
     public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) {
         String orderNumber = ordersPaymentDTO.getOrderNumber();
 
-        Orders orders = getOwnedOrder(orderMapper.getByNumber(orderNumber).getId());
+        Orders orders = orderMapper.getByNumber(orderNumber);
+
+        // 验证订单是否存在
+        if (orders == null) {
+            log.error("错误：订单不存在 {}", orderNumber);
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        // 验证订单属于当前用户
+        if (!BaseContext.getCurrentId().equals(orders.getUserId())) {
+            log.warn("用户 {} 尝试支付非本人订单 {}", BaseContext.getCurrentId(), orderNumber);
+            throw new OrderBusinessException(MessageConstant.USER_INFO_MISMATCH);
+        }
 
         // 验证订单状态是否为待支付
         if (!Orders.PENDING_PAYMENT.equals(orders.getStatus())) {
-            log.warn("订单 {} 状态不是待支付状态 {}", orders.getNumber(), orders.getStatus());
+            log.error("错误：订单 {} 状态不是待支付状态 {}", orders.getNumber(), orders.getStatus());
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
@@ -248,7 +261,11 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public OrderVO details(Long id) {
-        Orders orders = getOwnedOrder(id);
+        // 管理端接口:按 id 查即可,不做用户归属校验
+        Orders orders = orderMapper.getById(id);
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
 
         List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
 
@@ -404,6 +421,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void userCancel(Long id) {
         Orders order = getOwnedOrder(id);
+
+        // 只有待付款、待接单允许用户自行取消
+        if (!Orders.PENDING_PAYMENT.equals(order.getStatus())
+                && !Orders.TO_BE_CONFIRMED.equals(order.getStatus())) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
 
         order.setStatus(Orders.CANCELLED);
         order.setCancelTime(LocalDateTime.now());
