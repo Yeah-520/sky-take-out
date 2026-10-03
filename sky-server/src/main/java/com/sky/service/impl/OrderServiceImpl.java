@@ -75,10 +75,15 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 计算订单金额
-        BigDecimal packAmount = ordersSubmitDTO.getPackAmount() == null ? BigDecimal.ZERO : BigDecimal.valueOf(ordersSubmitDTO.getPackAmount());
+        // TODO 配送费后期须优化
+        BigDecimal deliveryFee = BigDecimal.valueOf(6.0);
+        BigDecimal packAmount = BigDecimal.valueOf(ordersSubmitDTO.getPackAmount());
+        if (packAmount == null || packAmount.compareTo(BigDecimal.ZERO) < 0){
+            packAmount = BigDecimal.ZERO;
+        }
         BigDecimal amount = shoppingCartList.stream()
                 .map(cart -> cart.getAmount().multiply(BigDecimal.valueOf(cart.getNumber())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add).add(packAmount).add(BigDecimal.valueOf(6.0));
+                .reduce(BigDecimal.ZERO, BigDecimal::add).add(packAmount).add(deliveryFee);
 
         Orders orders = new Orders();
         BeanUtils.copyProperties(ordersSubmitDTO, orders);
@@ -239,18 +244,24 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void cancelOrder(OrdersCancelDTO ordersCancelDTO) {
         Orders orders = orderMapper.getById(ordersCancelDTO.getId());
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
         // 待付款、待派送、派送中、已完成状态可以进行取消操作，进行取消操作需要选择取消原因
         // TODO 还需补充退款操作
-        if (orders.getStatus().equals(Orders.PENDING_PAYMENT) || orders.getStatus().equals(Orders.TO_BE_CONFIRMED) || orders.getStatus().equals(Orders.DELIVERY_IN_PROGRESS) || orders.getStatus().equals(Orders.COMPLETED)) {
-            orders.setId(ordersCancelDTO.getId());
-            orders.setCancelReason(ordersCancelDTO.getCancelReason());
-            orders.setCancelTime(LocalDateTime.now());
-            orders.setStatus(Orders.CANCELLED);
-            orderMapper.update(orders);
-            log.info("等待退款，订单号：{}", orders.getNumber());
-        } else {
-            log.error("错误：订单状态不允许取消");
+        if (!Orders.PENDING_PAYMENT.equals(orders.getStatus())
+                && !Orders.TO_BE_CONFIRMED.equals(orders.getStatus())
+                && !Orders.DELIVERY_IN_PROGRESS.equals(orders.getStatus())
+                && !Orders.COMPLETED.equals(orders.getStatus())) {
+            log.warn("订单 {} 状态 {} 不允许取消", orders.getNumber(), orders.getStatus());
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
+
+        orders.setCancelReason(ordersCancelDTO.getCancelReason());
+        orders.setCancelTime(LocalDateTime.now());
+        orders.setStatus(Orders.CANCELLED);
+        orderMapper.update(orders);
+        log.info("等待退款，订单号：{}", orders.getNumber());
     }
 
     /**
@@ -487,7 +498,7 @@ public class OrderServiceImpl implements OrderService {
         Orders order = orderMapper.getById(id);
 
         if (order == null) {
-            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
         Map<String, Object> map = new HashMap<>();
