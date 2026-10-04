@@ -50,14 +50,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public TurnoverReportVO getTurnoverStatistics(LocalDate begin, LocalDate end) {
 
-        List<LocalDate> dateList = new ArrayList<>();
-
-        dateList.add(begin);
-
-        while (!begin.equals(end)) {
-            begin = begin.plusDays(1);
-            dateList.add(begin);
-        }
+        List<LocalDate> dateList = buildDateList(begin, end);
 
         List<Double> turnoverlist = new ArrayList<>();
 
@@ -90,12 +83,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public UserReportVO getUserStatistics(LocalDate begin, LocalDate end) {
 
-        List<LocalDate> dateList = new ArrayList<>();
-
-        while (!begin.equals(end)) {
-            begin = begin.plusDays(1);
-            dateList.add(begin);
-        }
+        List<LocalDate> dateList = buildDateList(begin, end);
 
         List<Integer> newUserList = new ArrayList<>();
 
@@ -134,12 +122,7 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public OrderReportVO getOrderStatistics(LocalDate begin, LocalDate end) {
-        List<LocalDate> dateList = new ArrayList<>();
-
-        while (!begin.equals(end)) {
-            begin = begin.plusDays(1);
-            dateList.add(begin);
-        }
+        List<LocalDate> dateList = buildDateList(begin, end);
 
         List<Integer> orderCountList = new ArrayList<>();
 
@@ -285,6 +268,25 @@ public class ReportServiceImpl implements ReportService {
         } catch (IOException e) {
             log.error("导出业务数据失败:{}", e.getMessage());
         }
+    }
 
+    /**
+     * 生成 [begin, end] 闭区间的日期列表(含首尾)
+     *
+     * @param begin 开始日期
+     * @param end   结束日期
+     * @return 日期列表
+     */
+    private List<LocalDate> buildDateList(LocalDate begin, LocalDate end) {
+        if (begin.isAfter(end)) {
+            throw new IllegalArgumentException("开始日期不能晚于结束日期");
+        }
+        List<LocalDate> dateList = new ArrayList<>();
+        LocalDate cur = begin;
+        while (!cur.isAfter(end)) {
+            dateList.add(cur);
+            cur = cur.plusDays(1);
+        }
+        return dateList;
     }
 }

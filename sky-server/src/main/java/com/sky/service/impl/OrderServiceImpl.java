@@ -77,13 +77,16 @@ public class OrderServiceImpl implements OrderService {
         // 计算订单金额
         // TODO 配送费后期须优化
         BigDecimal deliveryFee = BigDecimal.valueOf(6.0);
-        BigDecimal packAmount = BigDecimal.valueOf(ordersSubmitDTO.getPackAmount());
-        if (packAmount == null || packAmount.compareTo(BigDecimal.ZERO) < 0){
-            packAmount = BigDecimal.ZERO;
-        }
+        Integer rawPackAmount = ordersSubmitDTO.getPackAmount();
+        // 服务端校验:null 与非正数一律按 0 计,防止前端传负数压低金额
+        int packAmountValue = (rawPackAmount == null || rawPackAmount < 0) ? 0 : rawPackAmount;
+        BigDecimal packAmount = BigDecimal.valueOf(packAmountValue);
+
         BigDecimal amount = shoppingCartList.stream()
                 .map(cart -> cart.getAmount().multiply(BigDecimal.valueOf(cart.getNumber())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add).add(packAmount).add(deliveryFee);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .add(packAmount)
+                .add(deliveryFee);
 
         Orders orders = new Orders();
         BeanUtils.copyProperties(ordersSubmitDTO, orders);
