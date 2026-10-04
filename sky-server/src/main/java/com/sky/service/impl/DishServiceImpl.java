@@ -8,6 +8,7 @@ import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
 import com.sky.entity.DishFlavor;
+import com.sky.exception.DishBusinessException;
 import com.sky.mapper.DishMapper;
 import com.sky.mapper.DishFlavorMapper;
 import com.sky.mapper.SetmealDishMapper;
@@ -77,14 +78,14 @@ public class DishServiceImpl implements DishService {
         for (Long id : ids) {
             Dish dish = dishMapper.getById(id);
             if (Objects.equals(dish.getStatus(), StatusConstant.ENABLE)) {
-                throw new RuntimeException(MessageConstant.DISH_ON_SALE);
+                throw new DishBusinessException(MessageConstant.DISH_ON_SALE);
             }
         }
 
         // 判断菜品是否关联套餐
         List<Long> setmealIds = setmealDishMapper.getSetmealDishIds(ids);
         if (setmealIds != null && !setmealIds.isEmpty()) {
-            throw new RuntimeException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
+            throw new DishBusinessException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
         }
 
         // 批量删除菜品表中对应的数据

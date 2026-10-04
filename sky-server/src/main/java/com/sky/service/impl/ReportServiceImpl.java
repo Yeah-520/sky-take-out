@@ -2,6 +2,7 @@ package com.sky.service.impl;
 
 import com.sky.dto.GoodsSalesDTO;
 import com.sky.entity.Orders;
+import com.sky.exception.OrderBusinessException;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
@@ -217,13 +218,13 @@ public class ReportServiceImpl implements ReportService {
 
         //2. 通过POI将数据写入到Excel文件中
         InputStream in = this.getClass().getClassLoader().getResourceAsStream("template/运营数据报表模板.xlsx");
+        if (in == null) {
+            throw new OrderBusinessException("运营数据报表模板不存在,请检查 classpath:template/ 下的模板文件");
+        }
 
         try {
             //基于模板文件创建一个新的Excel文件
-            XSSFWorkbook excel = null;
-            if (in != null) {
-                excel = new XSSFWorkbook(in);
-            }
+            XSSFWorkbook excel = new XSSFWorkbook(in);
 
             //获取表格文件的Sheet页
             XSSFSheet sheet = excel.getSheet("Sheet1");

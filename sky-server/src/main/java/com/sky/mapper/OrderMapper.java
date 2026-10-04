@@ -8,7 +8,6 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -65,11 +64,11 @@ public interface OrderMapper {
     /**
      * 订单统计
      *
-     * @param status 待确认订单
+     * @param toBeConfirmed 待确认订单
      * @return 订单统计
      */
     @Select("select count(status) from orders where status = #{toBeConfirmed}")
-    Integer getStatistics(Integer status);
+    Integer getStatistics(Integer toBeConfirmed);
 
     /**
      * 根据条件查询订单
@@ -82,12 +81,12 @@ public interface OrderMapper {
     /**
      * 根据状态和订单时间查询订单
      *
-     * @param status    订单状态
+     * @param payStatus 订单状态
      * @param orderTime 订单时间
      * @return 订单列表
      */
-    @Select("select * from orders where status = #{status} and order_time < #{orderTime}")
-    List<Orders> getByStatusAndOrderTimeLT(Integer status, LocalDateTime orderTime);
+    @Select("select * from orders where pay_status = #{payStatus} and order_time < #{orderTime}")
+    List<Orders> getByStatusAndOrderTimeLT(Integer payStatus, LocalDateTime orderTime);
 
     /**
      * 修改订单状态
