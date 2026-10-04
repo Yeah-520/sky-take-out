@@ -70,6 +70,7 @@ public class DishServiceImpl implements DishService {
         return new PageResult(page.getTotal(), page.getResult());
     }
 
+    @Transactional
     @Override
     public void deleteBatch(List<Long> ids) {
         // 判断菜品是否在售
@@ -118,6 +119,7 @@ public class DishServiceImpl implements DishService {
      *
      * @param dishDTO 菜品信息
      */
+    @Transactional
     @Override
     public void updateWithFlavor(DishDTO dishDTO) {
         Dish dish = new Dish();
@@ -162,8 +164,8 @@ public class DishServiceImpl implements DishService {
     /**
      * 条件查询菜品和口味
      *
-      * @param dish 菜品
-      * @return 菜品和口味
+     * @param dish 菜品
+     * @return 菜品和口味
      */
     @Override
     public List<DishVO> listWithFlavor(Dish dish) {

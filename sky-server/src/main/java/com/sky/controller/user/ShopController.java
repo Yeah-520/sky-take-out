@@ -22,6 +22,10 @@ public class ShopController {
     @GetMapping("/status")
     public Result<Integer> getStatus() {
         Integer status = (Integer) redisTemplate.opsForValue().get("SHOP_STATUS");
+        if (status == null) {
+            log.info("店铺状态不存在，设置为默认打烊中");
+            status = 0;
+        }
         log.info("获取店铺状态为：{}", status == 1 ? "营业中" : "打烊中");
         return Result.success(status);
     }

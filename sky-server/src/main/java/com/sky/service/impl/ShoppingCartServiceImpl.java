@@ -1,5 +1,6 @@
 package com.sky.service.impl;
 
+import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.ShoppingCartDTO;
 import com.sky.entity.Dish;
@@ -109,6 +110,9 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         shoppingCart.setUserId(BaseContext.getCurrentId());
 
         ShoppingCart cart = shoppingCartMapper.getByUserIdAndDishIdOrSetmealId(shoppingCart);
+        if (cart == null) {
+            throw new RuntimeException(MessageConstant.CART_ITEM_NOT_EXIST);
+        }
         BeanUtils.copyProperties(cart, shoppingCart);
 
         if (shoppingCart.getNumber() > 1) {

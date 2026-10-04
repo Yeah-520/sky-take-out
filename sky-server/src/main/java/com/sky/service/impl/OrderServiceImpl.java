@@ -69,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
         ShoppingCart shoppingCart = new ShoppingCart();
         shoppingCart.setUserId(userId);
         List<ShoppingCart> shoppingCartList = shoppingCartMapper.list(shoppingCart);
-        if (shoppingCartList == null) {
+        if (shoppingCartList == null || shoppingCartList.isEmpty()) {
             log.error("错误：购物车为空");
             throw new ShoppingCartBusinessException(MessageConstant.SHOPPING_CART_IS_NULL);
         }

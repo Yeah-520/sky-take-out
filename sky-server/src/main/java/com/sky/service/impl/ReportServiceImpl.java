@@ -7,6 +7,7 @@ import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
 import com.sky.service.WorkspaceService;
 import com.sky.vo.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ReportServiceImpl implements ReportService {
 
@@ -41,20 +43,20 @@ public class ReportServiceImpl implements ReportService {
     /**
      * 获取营业额统计
      *
-     * @param startTime 开始时间
-     * @param endTime   结束时间
+     * @param begin 开始时间
+     * @param end   结束时间
      * @return TurnoverReportVO
      */
     @Override
-    public TurnoverReportVO getTurnoverStatistics(LocalDate startTime, LocalDate endTime) {
+    public TurnoverReportVO getTurnoverStatistics(LocalDate begin, LocalDate end) {
 
         List<LocalDate> dateList = new ArrayList<>();
 
-        dateList.add(startTime);
+        dateList.add(begin);
 
-        while (!startTime.equals(endTime)) {
-            startTime = startTime.plusDays(1);
-            dateList.add(startTime);
+        while (!begin.equals(end)) {
+            begin = begin.plusDays(1);
+            dateList.add(begin);
         }
 
         List<Double> turnoverlist = new ArrayList<>();
@@ -154,11 +156,11 @@ public class ReportServiceImpl implements ReportService {
             validOrderCountList.add(validOrderCount);
         }
 
-        Integer totalOrderCount = orderCountList.stream().reduce(Integer::sum).get();
+        Integer totalOrderCount = orderCountList.stream().reduce(Integer::sum).orElse(0);
 
-        Integer validOrderCount = validOrderCountList.stream().reduce(Integer::sum).get();
+        Integer validOrderCount = validOrderCountList.stream().reduce(Integer::sum).orElse(0);
 
-        Double orderCompletionRate = 0.0;
+        double orderCompletionRate = 0.0;
         if (totalOrderCount != 0) {
             //计算订单完成率
             orderCompletionRate = validOrderCount.doubleValue() / totalOrderCount;
@@ -204,14 +206,14 @@ public class ReportServiceImpl implements ReportService {
      * 根据时间范围和状态获取订单数量
      *
      * @param beginTime 开始时间
-     * @param endTime   结束时间
+     * @param end       结束时间
      * @param status    状态
      * @return 订单数量
      */
-    private Integer getOrderCount(LocalDateTime beginTime, LocalDateTime endTime, Integer status) {
+    private Integer getOrderCount(LocalDateTime beginTime, LocalDateTime end, Integer status) {
         Map<String, Object> map = new HashMap<>();
         map.put("startDateTime", beginTime);
-        map.put("endDateTime", endTime);
+        map.put("endDateTime", end);
         map.put("status", status);
         return orderMapper.countByMap(map);
     }
@@ -235,7 +237,10 @@ public class ReportServiceImpl implements ReportService {
 
         try {
             //基于模板文件创建一个新的Excel文件
-            XSSFWorkbook excel = new XSSFWorkbook(in);
+            XSSFWorkbook excel = null;
+            if (in != null) {
+                excel = new XSSFWorkbook(in);
+            }
 
             //获取表格文件的Sheet页
             XSSFSheet sheet = excel.getSheet("Sheet1");
@@ -278,7 +283,7 @@ public class ReportServiceImpl implements ReportService {
             out.close();
             excel.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("导出业务数据失败:{}", e.getMessage());
         }
 
     }

@@ -1,5 +1,6 @@
 package com.sky.websocket;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -14,19 +15,19 @@ import java.util.Map;
 /**
  * WebSocket服务
  */
+@Slf4j
 @Component
 @ServerEndpoint("/ws/{sid}")
 public class WebSocketServer {
 
     //存放会话对象
-    private static Map<String, Session> sessionMap = new HashMap();
+    private static final Map<String, Session> sessionMap = new HashMap<>();
 
     /**
      * 连接建立成功调用的方法
      */
     @OnOpen
     public void onOpen(Session session, @PathParam("sid") String sid) {
-        System.out.println("客户端：" + sid + "建立连接");
         sessionMap.put(sid, session);
     }
 
@@ -47,7 +48,6 @@ public class WebSocketServer {
      */
     @OnClose
     public void onClose(@PathParam("sid") String sid) {
-        System.out.println("连接断开:" + sid);
         sessionMap.remove(sid);
     }
 
@@ -63,7 +63,7 @@ public class WebSocketServer {
                 //服务器向客户端发送消息
                 session.getBasicRemote().sendText(message);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("发送消息出错：{}", e.getMessage());
             }
         }
     }
