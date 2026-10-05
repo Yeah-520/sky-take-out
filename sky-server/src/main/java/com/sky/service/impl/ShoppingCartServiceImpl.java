@@ -112,7 +112,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         ShoppingCart cart = shoppingCartMapper.getByUserIdAndDishIdOrSetmealId(shoppingCart);
         if (cart == null) {
-            throw new ShoppingCartBusinessException(MessageConstant.SHOPPING_CART_EMPTY);
+            throw new ShoppingCartBusinessException(MessageConstant.CART_ITEM_NOT_EXIST);
         }
         BeanUtils.copyProperties(cart, shoppingCart);
 

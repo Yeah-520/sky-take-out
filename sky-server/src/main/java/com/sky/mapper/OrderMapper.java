@@ -81,12 +81,12 @@ public interface OrderMapper {
     /**
      * 根据状态和订单时间查询订单
      *
-     * @param payStatus 订单状态
+     * @param status    订单状态
      * @param orderTime 订单时间
      * @return 订单列表
      */
-    @Select("select * from orders where pay_status = #{payStatus} and order_time < #{orderTime}")
-    List<Orders> getByStatusAndOrderTimeLT(Integer payStatus, LocalDateTime orderTime);
+    @Select("select * from orders where status = #{status} and order_time < #{orderTime}")
+    List<Orders> getByStatusAndOrderTimeLT(Integer status, LocalDateTime orderTime);
 
     /**
      * 修改订单状态

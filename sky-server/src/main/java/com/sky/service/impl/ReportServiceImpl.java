@@ -1,5 +1,6 @@
 package com.sky.service.impl;
 
+import com.sky.constant.MessageConstant;
 import com.sky.dto.GoodsSalesDTO;
 import com.sky.entity.Orders;
 import com.sky.exception.OrderBusinessException;
@@ -280,7 +281,7 @@ public class ReportServiceImpl implements ReportService {
      */
     private List<LocalDate> buildDateList(LocalDate begin, LocalDate end) {
         if (begin.isAfter(end)) {
-            throw new IllegalArgumentException("开始日期不能晚于结束日期");
+            throw new OrderBusinessException(MessageConstant.START_DATE_LATER_THAN_END_DATE);
         }
         List<LocalDate> dateList = new ArrayList<>();
         LocalDate cur = begin;

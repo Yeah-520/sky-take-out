@@ -24,10 +24,13 @@ public class OrderTask {
     @Scheduled(cron = "0 * * * * ?")
     public void processTimeoutOrders() {
         log.info("订单取消任务，处理超时订单");
-        List<Orders> list = orderMapper.getByStatusAndOrderTimeLT(Orders.UN_PAID, LocalDateTime.now().plusMinutes(-15));
+        List<Orders> list = orderMapper.getByStatusAndOrderTimeLT(Orders.PENDING_PAYMENT, LocalDateTime.now().plusMinutes(-15));
 
         if (list != null && !list.isEmpty()) {
             for (Orders orders : list) {
+                if (!Orders.PENDING_PAYMENT.equals(orders.getStatus())) {
+                    continue;
+                }
                 orders.setStatus(Orders.CANCELLED);
                 orders.setCancelTime(LocalDateTime.now());
                 orders.setCancelReason("订单超时取消");

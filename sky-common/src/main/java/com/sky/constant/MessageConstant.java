@@ -25,6 +25,5 @@ public class MessageConstant {
     public static final String ORDER_NOT_FOUND = "订单不存在";
     public static final String USER_INFO_MISMATCH = "用户信息不匹配";
     public static final String CART_ITEM_NOT_EXIST = "购物车商品不存在";
-    public static final String SHOPPING_CART_EMPTY = "购物车为空";
-
+    public static final String START_DATE_LATER_THAN_END_DATE = "开始日期不能晚于结束日期";
 }
