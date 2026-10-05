@@ -22,7 +22,7 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class WorkspaceServiceImpl implements WorkspaceService {
+public class WorkSpaceServiceImpl implements WorkspaceService {
 
     @Autowired
     private OrderMapper orderMapper;
