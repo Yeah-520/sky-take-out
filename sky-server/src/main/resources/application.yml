@@ -34,6 +34,10 @@ logging:
         controller: info
 
 sky:
+  delivery:
+    # 配送费(元)
+    fee: 6.0
+
   jwt:
     # 设置jwt签名加密时使用的秘钥
     admin-secret-key: itcast

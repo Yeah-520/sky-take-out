@@ -23,6 +23,7 @@ import com.sky.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +48,12 @@ public class OrderServiceImpl implements OrderService {
     private WeChatPayUtil weChatPayUtil;
     @Autowired
     private WebSocketServer webSocketServer;
+
+    /**
+     * 配送费(元),可在 application.yml 中通过 sky.delivery.fee 覆盖
+     */
+    @Value("${sky.delivery.fee:6.0}")
+    private BigDecimal deliveryFee;
 
     /**
      * 提交订单
@@ -75,8 +82,6 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 计算订单金额
-        // TODO 配送费后期须优化
-        BigDecimal deliveryFee = BigDecimal.valueOf(6.0);
         Integer rawPackAmount = ordersSubmitDTO.getPackAmount();
         // 服务端校验:null 与非正数一律按 0 计,防止前端传负数压低金额
         int packAmountValue = (rawPackAmount == null || rawPackAmount < 0) ? 0 : rawPackAmount;
@@ -183,6 +188,10 @@ public class OrderServiceImpl implements OrderService {
 
         // 根据订单号查询订单
         Orders ordersDB = orderMapper.getByNumber(outTradeNo);
+        if (ordersDB == null) {
+            log.error("错误：订单不存在 {}", outTradeNo);
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
 
         // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
         Orders orders = Orders.builder()
@@ -204,11 +213,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void paySuccess(String outTradeNo, boolean isFake) {
 
-        // 当前登录用户id
-        Long userId = BaseContext.getCurrentId();
-
-        // 根据订单号查询当前用户的订单
+        // 根据订单号查询订单(支付回调由外部系统发起,没有登录态,不能依赖 BaseContext)
         Orders ordersDB = orderMapper.getByNumber(outTradeNo);
+        if (ordersDB == null) {
+            log.error("错误：订单不存在 {}", outTradeNo);
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
 
         // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
         Orders orders = Orders.builder()
@@ -400,10 +410,6 @@ public class OrderServiceImpl implements OrderService {
 
                 list.add(orderVO);
             }
-        }
-
-        if (pageResult == null) {
-            throw new OrderBusinessException(MessageConstant.UNKNOWN_ERROR);
         }
 
         return new PageResult(pageResult.getTotal(), list);

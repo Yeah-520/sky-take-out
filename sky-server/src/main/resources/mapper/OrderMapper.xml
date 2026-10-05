@@ -118,6 +118,7 @@
         from orders o,
         order_detail od
         where o.id = od.order_id
+        and o.status = 5
         <if test="begin != null">
             and o.order_time &gt;= #{begin}
         </if>

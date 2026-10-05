@@ -60,10 +60,10 @@ public interface SetmealMapper {
 
     /**
      * 更新套餐
+     * <p>动态 SQL 见 SetmealMapper.xml:只更新非 null 字段,避免编辑套餐时把 status 写成 NULL
      *
      * @param setmeal 套餐信息
      */
-    @Update("update setmeal set name = #{name} , category_id = #{categoryId}, price = #{price} ,status = #{status}, description = #{description}, image = #{image}, update_time = #{updateTime}, update_user = #{updateUser} where id = #{id}")
     @AutoFill(value = OperationType.UPDATE)
     void update(Setmeal setmeal);
 

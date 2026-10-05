@@ -6,7 +6,7 @@
         insert into user(openid, name, phone, sex, id_number, avatar, create_time)
         VALUES (#{openid}, #{name}, #{phone}, #{sex}, #{idNumber}, #{avatar}, #{createTime})
     </insert>
-    <select id="countByMap" resultType="java.lang.Integer" parameterType="map">
+    <select id="countByMap" resultType="java.lang.Integer">
         select count(id)
         from user
         <where>
