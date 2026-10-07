@@ -61,8 +61,8 @@ public class ReportServiceImpl implements ReportService {
             LocalDateTime endDateTime = LocalDateTime.of(dateTime, LocalTime.MAX);
 
             Map<String, Object> map = new HashMap<>();
-            map.put("startDateTime", startDateTime);
-            map.put("endDateTime", endDateTime);
+            map.put("begin", startDateTime);
+            map.put("end", endDateTime);
             map.put("status", Orders.COMPLETED);
             Double turnover = orderMapper.sumByMap(map);
             turnover = turnover == null ? 0.0 : turnover;
