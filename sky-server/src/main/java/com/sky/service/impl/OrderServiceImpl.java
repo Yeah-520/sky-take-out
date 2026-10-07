@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @Slf4j
@@ -99,7 +100,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setOrderTime(LocalDateTime.now());
         orders.setPayStatus(Orders.UN_PAID);
         orders.setStatus(Orders.PENDING_PAYMENT);
-        orders.setNumber(String.valueOf(System.currentTimeMillis()));
+        orders.setNumber(generateOrderNumber(userId));
         orders.setPhone(addressBook.getPhone());
         orders.setConsignee(addressBook.getConsignee());
         orders.setAddress(addressBook.getDetail());
@@ -468,8 +469,7 @@ public class OrderServiceImpl implements OrderService {
 
         // 对Orders表进行更新，设置订单状态为待支付
         order.setId(null);
-        // TODO 并发重复问题
-        order.setNumber(String.valueOf(System.currentTimeMillis()));
+        order.setNumber(generateOrderNumber(BaseContext.getCurrentId()));
         order.setOrderTime(LocalDateTime.now());
         order.setCheckoutTime(null);
         order.setPayStatus(Orders.UN_PAID);
@@ -536,5 +536,14 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderBusinessException(MessageConstant.USER_INFO_MISMATCH);
         }
         return orders;
+    }
+
+    /**
+     * 生成订单号:时间戳(13位) + 用户id + 3位随机数
+     * 说明:纯时间戳在同毫秒并发下会重复;拼上 userId 与随机位后碰撞概率可忽略
+     */
+    private String generateOrderNumber(Long userId) {
+        String random = String.format("%03d", ThreadLocalRandom.current().nextInt(1000));
+        return System.currentTimeMillis() + String.format("%04d", userId == null ? 0 : userId % 10000) + random;
     }
 }

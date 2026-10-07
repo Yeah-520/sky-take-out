@@ -197,8 +197,8 @@ public class ReportServiceImpl implements ReportService {
      */
     private Integer getOrderCount(LocalDateTime beginTime, LocalDateTime end, Integer status) {
         Map<String, Object> map = new HashMap<>();
-        map.put("startDateTime", beginTime);
-        map.put("endDateTime", end);
+        map.put("begin", beginTime);
+        map.put("end", end);
         map.put("status", status);
         return orderMapper.countByMap(map);
     }
