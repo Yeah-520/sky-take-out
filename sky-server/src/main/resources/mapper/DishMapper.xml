@@ -35,6 +35,11 @@
             </if>
         </where>
     </select>
+    <select id="countGroupByStatus" resultType="java.util.Map">
+        select status, count(id) as cnt
+        from dish
+        group by status
+    </select>
 
     <delete id="deleteByIds">
         delete from dish where id in

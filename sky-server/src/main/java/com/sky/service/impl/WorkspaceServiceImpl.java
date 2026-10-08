@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -50,33 +51,35 @@ public class WorkspaceServiceImpl implements WorkspaceService {
           新增用户：当日新增用户的数量
          */
 
-        Map<String, Object> map = new HashMap<>();
-        map.put("begin", begin);
-        map.put("end", end);
+        List<Map<String, Object>> rows = orderMapper.countGroupByStatus(begin, end);
 
-        //查询总订单数
-        Integer totalOrderCount = orderMapper.countByMap(map);
-
-        map.put("status", Orders.COMPLETED);
-        //营业额
-        Double turnover = orderMapper.sumByMap(map);
-        turnover = turnover == null ? 0.0 : turnover;
-
-        //有效订单数
-        Integer validOrderCount = orderMapper.countByMap(map);
+        int totalOrderCount = 0;
+        int validOrderCount = 0;
+        double turnover = 0.0;
+        for (Map<String, Object> row : rows) {
+            int cnt = toInt(row.get("cnt"));
+            // 全部状态相加即总订单数
+            totalOrderCount += cnt;
+            // 已完成那一行即有效订单数与营业额
+            if (Orders.COMPLETED.equals(toInteger(row.get("status")))) {
+                validOrderCount = cnt;
+                turnover = toDouble(row.get("total"));
+            }
+        }
 
         double unitPrice = 0.0;
-
         double orderCompletionRate = 0.0;
         if (totalOrderCount != 0 && validOrderCount != 0) {
             //订单完成率
-            orderCompletionRate = validOrderCount.doubleValue() / totalOrderCount;
+            orderCompletionRate = (double) validOrderCount / totalOrderCount;
             //平均客单价
             unitPrice = turnover / validOrderCount;
         }
 
-        //新增用户数
-        Integer newUsers = userMapper.countByMap(map);
+        Map<String, Object> userMap = new HashMap<>();
+        userMap.put("begin", begin);
+        userMap.put("end", end);
+        Integer newUsers = userMapper.countByMap(userMap);
 
         return BusinessDataVO.builder()
                 .turnover(turnover)
@@ -95,34 +98,19 @@ public class WorkspaceServiceImpl implements WorkspaceService {
      */
     @Override
     public OrderOverViewVO getOrderOverView() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("begin", LocalDateTime.now().with(LocalTime.MIN));
-        map.put("status", Orders.TO_BE_CONFIRMED);
+        LocalDateTime begin = LocalDateTime.now().with(LocalTime.MIN);
 
-        //待接单
-        Integer waitingOrders = orderMapper.countByMap(map);
+        // 【性能优化】一次 group by 替代原来的 5 次 count（待接单/待派送/已完成/已取消/全部）
+        Map<Integer, Integer> countMap = toStatusCountMap(orderMapper.countGroupByStatus(begin, null));
 
-        //待派送
-        map.put("status", Orders.CONFIRMED);
-        Integer deliveredOrders = orderMapper.countByMap(map);
-
-        //已完成
-        map.put("status", Orders.COMPLETED);
-        Integer completedOrders = orderMapper.countByMap(map);
-
-        //已取消
-        map.put("status", Orders.CANCELLED);
-        Integer cancelledOrders = orderMapper.countByMap(map);
-
-        //全部订单
-        map.put("status", null);
-        Integer allOrders = orderMapper.countByMap(map);
+        // 全部订单 = 各状态之和
+        int allOrders = countMap.values().stream().mapToInt(Integer::intValue).sum();
 
         return OrderOverViewVO.builder()
-                .waitingOrders(waitingOrders)
-                .deliveredOrders(deliveredOrders)
-                .completedOrders(completedOrders)
-                .cancelledOrders(cancelledOrders)
+                .waitingOrders(countMap.getOrDefault(Orders.TO_BE_CONFIRMED, 0))   //待接单
+                .deliveredOrders(countMap.getOrDefault(Orders.CONFIRMED, 0))      //待派送
+                .completedOrders(countMap.getOrDefault(Orders.COMPLETED, 0))      //已完成
+                .cancelledOrders(countMap.getOrDefault(Orders.CANCELLED, 0))      //已取消
                 .allOrders(allOrders)
                 .build();
     }
@@ -134,16 +122,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
      */
     @Override
     public DishOverViewVO getDishOverView() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("status", StatusConstant.ENABLE);
-        Integer sold = dishMapper.countByMap(map);
-
-        map.put("status", StatusConstant.DISABLE);
-        Integer discontinued = dishMapper.countByMap(map);
+        // 【性能优化】一次 group by 替代原来的 2 次 count
+        Map<Integer, Integer> countMap = toStatusCountMap(dishMapper.countGroupByStatus());
 
         return DishOverViewVO.builder()
-                .sold(sold)
-                .discontinued(discontinued)
+                .sold(countMap.getOrDefault(StatusConstant.ENABLE, 0))
+                .discontinued(countMap.getOrDefault(StatusConstant.DISABLE, 0))
                 .build();
     }
 
@@ -154,16 +138,42 @@ public class WorkspaceServiceImpl implements WorkspaceService {
      */
     @Override
     public SetmealOverViewVO getSetmealOverView() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("status", StatusConstant.ENABLE);
-        Integer sold = setmealMapper.countByMap(map);
-
-        map.put("status", StatusConstant.DISABLE);
-        Integer discontinued = setmealMapper.countByMap(map);
+        Map<Integer, Integer> countMap = toStatusCountMap(setmealMapper.countGroupByStatus());
 
         return SetmealOverViewVO.builder()
-                .sold(sold)
-                .discontinued(discontinued)
+                .sold(countMap.getOrDefault(StatusConstant.ENABLE, 0))
+                .discontinued(countMap.getOrDefault(StatusConstant.DISABLE, 0))
                 .build();
+    }
+
+    /**
+     * 把 group by 查询结果转成 status -> count 的映射
+     *
+     * @param rows countGroupByStatus 的查询结果
+     * @return key = status，value = 数量
+     */
+    private Map<Integer, Integer> toStatusCountMap(List<Map<String, Object>> rows) {
+        Map<Integer, Integer> countMap = new HashMap<>();
+        for (Map<String, Object> row : rows) {
+            countMap.put(toInteger(row.get("status")), toInt(row.get("cnt")));
+        }
+        return countMap;
+    }
+
+    /**
+     * 安全转换说明：MyBatis 的 {@code resultType="java.util.Map"} 返回时，
+     * 数值列的具体 Java 类型由 JDBC 驱动决定（count 通常是 Long，sum(decimal) 通常是 BigDecimal），
+     * 因此统一按 {@link Number} 处理，避免直接强转引发 ClassCastException。
+     */
+    private Integer toInteger(Object value) {
+        return value == null ? null : ((Number) value).intValue();
+    }
+
+    private int toInt(Object value) {
+        return value == null ? 0 : ((Number) value).intValue();
+    }
+
+    private double toDouble(Object value) {
+        return value == null ? 0.0 : ((Number) value).doubleValue();
     }
 }

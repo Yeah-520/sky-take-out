@@ -5,6 +5,7 @@ import com.sky.dto.GoodsSalesDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
@@ -114,6 +115,18 @@ public interface OrderMapper {
      * @return 订单数量
      */
     Integer countByMap(Map<String, Object> map);
+
+    /**
+     * 【性能优化】按订单状态分组统计:一次查询拿到全部状态的订单数与金额合计
+     * <p>替代"同一张表按不同 status 反复 count/sum"的写法(原来 4~5 次查询 → 1 次)
+     * <p>用 {@code @Param} 显式声明参数名,避免 map key 写错导致条件静默失效
+     *
+     * @param begin 下单时间起(可空)
+     * @param end   下单时间止(可空)
+     * @return 每行三个字段:{@code status}、{@code cnt}(订单数)、{@code total}(金额合计)
+     */
+    List<Map<String, Object>> countGroupByStatus(@Param("begin") LocalDateTime begin,
+                                                 @Param("end") LocalDateTime end);
 
     /**
      * 查询Top10菜品

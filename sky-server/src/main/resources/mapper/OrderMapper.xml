@@ -86,11 +86,11 @@
         select sum(amount)
         from orders
         <where>
-            <if test="startDateTime != null">
-                and order_time &gt;= #{startDateTime}
+            <if test="begin != null">
+                and order_time &gt;= #{begin}
             </if>
-            <if test="endDateTime != null">
-                and order_time &lt;= #{endDateTime}
+            <if test="end != null">
+                and order_time &lt;= #{end}
             </if>
             <if test="status != null">
                 and status = #{status}
@@ -111,7 +111,21 @@
                 and status = #{status}
             </if>
         </where>
-
+    </select>
+    <select id="countGroupByStatus" resultType="java.util.Map">
+        select status,
+        count(id) as cnt,
+        ifnull(sum(amount), 0) as total
+        from orders
+        <where>
+            <if test="begin != null">
+                and order_time &gt;= #{begin}
+            </if>
+            <if test="end != null">
+                and order_time &lt;= #{end}
+            </if>
+        </where>
+        group by status
     </select>
     <select id="getSalesTop10" resultType="com.sky.dto.GoodsSalesDTO">
         select od.name, sum(od.number) number

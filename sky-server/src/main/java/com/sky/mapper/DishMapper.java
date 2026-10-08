@@ -108,4 +108,11 @@ public interface DishMapper {
      */
     Integer countByMap(Map map);
 
+    /**
+     * 【性能优化】按菜品状态分组统计:一次查询替代两次 countByMap
+     *
+     * @return 每行两个字段:{@code status}、{@code cnt}(数量)
+     */
+    List<Map<String, Object>> countGroupByStatus();
+
 }

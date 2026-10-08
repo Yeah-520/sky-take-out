@@ -77,4 +77,9 @@
             </if>
         </where>
     </select>
+    <select id="countGroupByStatus" resultType="java.util.Map">
+        select status, count(id) as cnt
+        from setmeal
+        group by status
+    </select>
 </mapper>
