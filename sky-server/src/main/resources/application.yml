@@ -49,6 +49,10 @@ sky:
     user-ttl: 7200000
     user-token-name: authentication
 
+  snowflake:
+    worker-id: 1
+    data-center-id: 0
+
   wechat:
     appid: ${sky.wechat.appid}
     secret: ${sky.wechat.secret}
