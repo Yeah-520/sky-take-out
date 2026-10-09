@@ -39,11 +39,11 @@ public class PayNotifyController {
     public void paySuccessNotify(HttpServletRequest request, HttpServletResponse response) throws Exception {
         //读取数据
         String body = readData(request);
-        log.info("支付成功回调：{}", body);
+        log.info("支付成功回调");
 
         //数据解密
         String plainText = decryptData(body);
-        log.info("解密后的文本：{}", plainText);
+        log.info("解密后的文本");
 
         JSONObject jsonObject = JSON.parseObject(plainText);
         String outTradeNo = jsonObject.getString("out_trade_no");//商户平台订单号

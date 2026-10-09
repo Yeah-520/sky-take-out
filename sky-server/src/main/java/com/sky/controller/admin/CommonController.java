@@ -1,5 +1,6 @@
 package com.sky.controller.admin;
 
+import com.sky.exception.BaseException;
 import com.sky.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -19,6 +21,7 @@ import java.util.UUID;
 public class CommonController {
     //TODO 后期需要改成OSS上传
     private static final String UPLOAD_DIR = "D:/Project/upload/";
+    private static final Set<String> ALLOWED = Set.of("jpg", "jpeg", "png", "gif", "bmp", "webp");
 
     @PostMapping("/upload")
     public Result<String> upload(MultipartFile file) {
@@ -35,7 +38,16 @@ public class CommonController {
             }
             // 3. 获取原始文件名 + 后缀
             String originalFilename = file.getOriginalFilename();
-            String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
+            if (originalFilename == null || !originalFilename.contains(".")) {
+                throw new BaseException("文件名非法");
+            }
+            String suffix = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+            if (!ALLOWED.contains(suffix)) {
+                throw new BaseException("只允许上传图片文件");
+            }
+            if (file.getSize() > 5 * 1024 * 1024) {
+                throw new BaseException("文件不能超过 5MB");
+            }
             // 4. UUID生成新文件名，防止重名覆盖
             String newFileName = UUID.randomUUID() + suffix;
             // 5. 拼接完整文件路径

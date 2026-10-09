@@ -147,7 +147,6 @@ public class OrderServiceImpl implements OrderService {
 
         // 验证订单是否存在
         if (orders == null) {
-            log.error("错误：订单不存在 {}", orderNumber);
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
@@ -224,7 +223,6 @@ public class OrderServiceImpl implements OrderService {
         // 根据订单号查询订单(支付回调由外部系统发起,没有登录态,不能依赖 BaseContext)
         Orders ordersDB = orderMapper.getByNumber(outTradeNo);
         if (ordersDB == null) {
-            log.error("错误：订单不存在 {}", outTradeNo);
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
@@ -272,9 +270,7 @@ public class OrderServiceImpl implements OrderService {
         // TODO 还需补充退款操作
         if (!Orders.PENDING_PAYMENT.equals(orders.getStatus())
                 && !Orders.TO_BE_CONFIRMED.equals(orders.getStatus())
-                && !Orders.DELIVERY_IN_PROGRESS.equals(orders.getStatus())
-                && !Orders.COMPLETED.equals(orders.getStatus())) {
-            log.warn("订单 {} 状态 {} 不允许取消", orders.getNumber(), orders.getStatus());
+                && !Orders.DELIVERY_IN_PROGRESS.equals(orders.getStatus())) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
