@@ -27,10 +27,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -173,7 +176,9 @@ public class OrderServiceImpl implements OrderService {
         map.put("orderId", orders.getId());
         map.put("content", "订单号：" + ordersPaymentDTO.getOrderNumber());
 
-        webSocketServer.sendToAllClient(JSON.toJSONString(map));
+        // 注册为"事务提交后"再推送:本方法带 @Transactional,若在提交前发送而事务随后回滚,
+        // 管理端会收到"来单提醒"却查不到订单。改为提交成功后推送。
+        sendAfterCommit(JSON.toJSONString(map));
         return vo;
     }
 
@@ -192,7 +197,10 @@ public class OrderServiceImpl implements OrderService {
             log.error("错误：订单不存在 {}", outTradeNo);
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
-
+        if (Orders.PAID.equals(ordersDB.getPayStatus())) {
+            log.warn("订单 {} 已支付,忽略重复回调", outTradeNo);
+            return;
+        }
         // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
         Orders orders = Orders.builder()
                 .id(ordersDB.getId())
@@ -325,6 +333,9 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void confirmOrder(Long id) {
+        Orders ordersDB = orderMapper.getById(id);
+        checkStatus(ordersDB, Orders.TO_BE_CONFIRMED);
+
         Orders orders = new Orders();
         orders.setId(id);
         orders.setStatus(Orders.CONFIRMED);
@@ -338,6 +349,9 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void delivery(Long id) {
+        Orders ordersDB = orderMapper.getById(id);
+        checkStatus(ordersDB, Orders.CONFIRMED);
+
         Orders orders = new Orders();
         orders.setId(id);
         orders.setStatus(Orders.DELIVERY_IN_PROGRESS);
@@ -351,6 +365,8 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
+        Orders ordersDB = orderMapper.getById(ordersRejectionDTO.getId());
+        checkStatus(ordersDB, Orders.TO_BE_CONFIRMED);
         Orders orders = Orders.builder()
                 .id(ordersRejectionDTO.getId())
                 .status(Orders.CANCELLED)
@@ -369,6 +385,10 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void completeOrder(Long id) {
+        // 先查库拿到真实订单,再校验状态(此处不能校验归属:本方法是管理端接口,BaseContext 里是 empId)
+        Orders ordersDB = orderMapper.getById(id);
+        checkStatus(ordersDB, Orders.DELIVERY_IN_PROGRESS);
+
         Orders orders = new Orders();
         orders.setId(id);
         orders.setStatus(Orders.COMPLETED);
@@ -398,17 +418,19 @@ public class OrderServiceImpl implements OrderService {
 
         // 查询出订单明细，并封装入OrderVO进行响应
         if (pageResult != null && pageResult.getTotal() > 0) {
-            for (Orders orders : pageResult) {
-                Long orderId = orders.getId();// 订单id
+            List<Long> orderIds = pageResult.stream().map(Orders::getId).collect(Collectors.toList());
+            if (!orderIds.isEmpty()) {
+                // 一次查出所有明细
+                List<OrderDetail> allDetails = orderDetailMapper.getByOrderIds(orderIds);
+                Map<Long, List<OrderDetail>> detailMap = allDetails.stream()
+                        .collect(Collectors.groupingBy(OrderDetail::getOrderId));
 
-                // 查询订单明细
-                List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orderId);
-
-                OrderVO orderVO = new OrderVO();
-                BeanUtils.copyProperties(orders, orderVO);
-                orderVO.setOrderDetailList(orderDetails);
-
-                list.add(orderVO);
+                for (Orders orders : pageResult) {
+                    OrderVO orderVO = new OrderVO();
+                    BeanUtils.copyProperties(orders, orderVO);
+                    orderVO.setOrderDetailList(detailMap.getOrDefault(orders.getId(), new ArrayList<>()));
+                    list.add(orderVO);
+                }
             }
         }
 
@@ -519,6 +541,27 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
+     * 事务提交后再推送 WebSocket 消息
+     * <p>若当前存在活动事务,则注册 {@code afterCommit} 回调,待事务成功提交后发送;
+     * 若没有事务(例如 {@code /notify/**} 这类不走拦截器的回调路径),则立即发送。
+     * <p>用途:避免"消息已发出、事务却回滚"导致管理端收到来单提醒却查不到订单。
+     *
+     * @param message 待推送的消息内容(JSON 字符串)
+     */
+    private void sendAfterCommit(String message) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    webSocketServer.sendToAllClient(message);
+                }
+            });
+        } else {
+            webSocketServer.sendToAllClient(message);
+        }
+    }
+
+    /**
      * 校验订单存在且归属当前登录用户,返回订单本身
      *
      * @param id 订单id
@@ -544,5 +587,23 @@ public class OrderServiceImpl implements OrderService {
      */
     private String generateOrderNumber() {
         return snowflake.nextIdStr();
+    }
+
+    /**
+     * 校验订单状态是否在允许的状态列表中
+     *
+     * @param orders  订单对象
+     * @param allowed 允许的状态列表
+     */
+    private void checkStatus(Orders orders, Integer... allowed) {
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        for (Integer s : allowed) {
+            if (s.equals(orders.getStatus())) {
+                return;
+            }
+        }
+        throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
     }
 }
