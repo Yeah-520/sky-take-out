@@ -55,8 +55,13 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private Snowflake snowflake;
 
+    // 配送费(元)
     @Value("${sky.delivery.fee:6.0}")
     private BigDecimal deliveryFee;
+
+    // 每份餐品的打包费(元)
+    @Value("${sky.pack.fee-per-item:1.0}")
+    private BigDecimal packFeePerItem;
 
     /**
      * 提交订单
@@ -85,20 +90,20 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 计算订单金额
-        Integer rawPackAmount = ordersSubmitDTO.getPackAmount();
-        // 服务端校验:null 与非正数一律按 0 计,防止前端传负数压低金额
-        int packAmountValue = (rawPackAmount == null || rawPackAmount < 0) ? 0 : rawPackAmount;
-        BigDecimal packAmount = BigDecimal.valueOf(packAmountValue);
+        // 打包费由服务端按购物车总份数计算(不再采信前端传值:否则可传 0 直接把打包费抹掉)
+        int totalPortions = shoppingCartList.stream().mapToInt(ShoppingCart::getNumber).sum();
+        BigDecimal packAmount = packFeePerItem.multiply(BigDecimal.valueOf(totalPortions));
 
-        BigDecimal amount = shoppingCartList.stream()
+        // 菜品小计
+        BigDecimal itemsTotal = shoppingCartList.stream()
                 .map(cart -> cart.getAmount().multiply(BigDecimal.valueOf(cart.getNumber())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .add(packAmount)
-                .add(deliveryFee);
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Orders orders = new Orders();
         BeanUtils.copyProperties(ordersSubmitDTO, orders);
-        orders.setAmount(amount);
+        orders.setPackAmount(packAmount.intValue());
+        orders.setDeliveryFee(deliveryFee);
+        orders.setAmount(itemsTotal.add(packAmount).add(deliveryFee));
         orders.setOrderTime(LocalDateTime.now());
         orders.setPayStatus(Orders.UN_PAID);
         orders.setStatus(Orders.PENDING_PAYMENT);
@@ -169,15 +174,9 @@ public class OrderServiceImpl implements OrderService {
 
         orderMapper.updateStatus(Orders.TO_BE_CONFIRMED, Orders.PAID, LocalDateTime.now(), orders.getId());
 
-        //通过WebSocket向客户端浏览器推送消息 type orderId content
-        Map<String, Object> map = new HashMap<>();
-        map.put("type", 1);  //1表示来单提醒 2表示客户催单
-        map.put("orderId", orders.getId());
-        map.put("content", "订单号：" + ordersPaymentDTO.getOrderNumber());
-
-        // 注册为"事务提交后"再推送:本方法带 @Transactional,若在提交前发送而事务随后回滚,
-        // 管理端会收到"来单提醒"却查不到订单。改为提交成功后推送。
-        sendAfterCommit(JSON.toJSONString(map));
+        // 来单提醒:注册为"事务提交后"再推送(本方法带 @Transactional,提交前发送而事务回滚会让管理端
+        // 收到"来单提醒"却查不到订单)
+        pushNewOrderReminder(orders.getId(), ordersPaymentDTO.getOrderNumber());
         return vo;
     }
 
@@ -197,7 +196,6 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
         if (Orders.PAID.equals(ordersDB.getPayStatus())) {
-            log.warn("订单 {} 已支付,忽略重复回调", outTradeNo);
             return;
         }
         // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
@@ -209,6 +207,9 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.update(orders);
+
+        // 来单提醒
+        pushNewOrderReminder(ordersDB.getId(), outTradeNo);
     }
 
 
@@ -226,6 +227,11 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
+        // 幂等:微信回调会重试,已支付则直接返回(这是真实回调实际走的入口)
+        if (Orders.PAID.equals(ordersDB.getPayStatus())) {
+            return;
+        }
+
         // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
         Orders orders = Orders.builder()
                 .id(ordersDB.getId())
@@ -235,6 +241,9 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.fakeUpdate(orders);
+
+        // 来单提醒(此前这里没有推送,导致接入真实微信支付后管理端收不到提醒)
+        pushNewOrderReminder(ordersDB.getId(), outTradeNo);
     }
 
     /**
@@ -430,7 +439,11 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        return new PageResult(pageResult.getTotal(), list);
+        long total = 0;
+        if (pageResult != null) {
+            total = pageResult.getTotal();
+        }
+        return new PageResult(total, list);
     }
 
     /**
@@ -534,6 +547,23 @@ public class OrderServiceImpl implements OrderService {
         String json = JSON.toJSONString(map);
 
         webSocketServer.sendToAllClient(json);
+    }
+
+    /**
+     * 推送"来单提醒"(type=1)给管理端
+     * <p>统一入口:避免各支付相关方法各写一遍消息体。内部走 {@link #sendAfterCommit},
+     * 有事务时等提交成功再发,无事务时立即发。
+     *
+     * @param orderId     订单id
+     * @param orderNumber 订单号
+     */
+    private void pushNewOrderReminder(Long orderId, String orderNumber) {
+        //通过WebSocket向客户端浏览器推送消息 type orderId content
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", 1);  //1表示来单提醒 2表示客户催单
+        map.put("orderId", orderId);
+        map.put("content", "订单号：" + orderNumber);
+        sendAfterCommit(JSON.toJSONString(map));
     }
 
     /**

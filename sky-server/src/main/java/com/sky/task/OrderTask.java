@@ -38,15 +38,22 @@ public class OrderTask {
     }
 
     /**
-     * 订单完成任务，处理待完成订单
+     * 订单完成任务，处理派送中超时的订单
+     * <p>每 10 分钟执行一次;按 {@code delivery_time}(派送时间)判断,派送中超过 60 分钟自动完成
      */
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void processDeliverOrders() {
-        log.info("订单发货任务，处理待发货订单");
-        List<Orders> list = orderMapper.getByStatusAndOrderTimeLT(Orders.DELIVERY_IN_PROGRESS, LocalDateTime.now().plusMinutes(-60));
+        log.info("订单发货任务，处理派送中超时的订单");
+        // 按"送达时间"超过 60 分钟判断(不是下单时间)
+        List<Orders> list = orderMapper.getByStatusAndDeliveryTimeLT(
+                Orders.DELIVERY_IN_PROGRESS, LocalDateTime.now().minusMinutes(60));
 
         if (list != null && !list.isEmpty()) {
             for (Orders orders : list) {
+                // 双重校验:并发下状态可能已被其它操作改变
+                if (!Orders.DELIVERY_IN_PROGRESS.equals(orders.getStatus())) {
+                    continue;
+                }
                 orders.setStatus(Orders.COMPLETED);
                 orderMapper.update(orders);
             }

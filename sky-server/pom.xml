@@ -120,10 +120,11 @@
         </dependency>
 
         <!-- poi -->
+        <!-- 版本由根 pom 的 dependencyManagement 统一管理(poi 与 poi-ooxml 必须同版本:
+             4.x 的 POILogger 是接口、3.16 是类,混用会抛 IncompatibleClassChangeError) -->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
-            <version>4.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>

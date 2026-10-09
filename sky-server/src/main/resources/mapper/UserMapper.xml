@@ -18,4 +18,12 @@
             </if>
         </where>
     </select>
+    <select id="countGroupByDate" resultType="java.util.Map">
+        select date_format(create_time, '%Y-%m-%d') as d,
+               count(id)                            as cnt
+        from user
+        where create_time &gt;= #{begin}
+          and create_time &lt;= #{end}
+        group by date_format(create_time, '%Y-%m-%d')
+    </select>
 </mapper>

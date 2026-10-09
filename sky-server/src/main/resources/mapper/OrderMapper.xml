@@ -4,11 +4,11 @@
 <mapper namespace="com.sky.mapper.OrderMapper">
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into orders (number, status, user_id, address_book_id, order_time, checkout_time, pay_method, pay_status,
-                            amount, remark, phone, address, consignee, estimated_delivery_time, delivery_status,
-                            pack_amount, tableware_number, tableware_status)
+                            amount, delivery_fee, remark, phone, address, consignee, estimated_delivery_time,
+                            delivery_status, pack_amount, tableware_number, tableware_status)
         values (#{number}, #{status}, #{userId}, #{addressBookId}, #{orderTime}, #{checkoutTime}, #{payMethod},
-                #{payStatus}, #{amount}, #{remark}, #{phone}, #{address}, #{consignee}, #{estimatedDeliveryTime},
-                #{deliveryStatus}, #{packAmount}, #{tablewareNumber}, #{tablewareStatus})
+                #{payStatus}, #{amount}, #{deliveryFee}, #{remark}, #{phone}, #{address}, #{consignee},
+                #{estimatedDeliveryTime}, #{deliveryStatus}, #{packAmount}, #{tablewareNumber}, #{tablewareStatus})
     </insert>
 
     <update id="update" parameterType="com.sky.entity.Orders">
@@ -126,6 +126,16 @@
             </if>
         </where>
         group by status
+    </select>
+    <select id="countGroupByDate" resultType="java.util.Map">
+        select date_format(order_time, '%Y-%m-%d')                         as d,
+               count(id)                                                   as cnt,
+               sum(case when status = 5 then 1 else 0 end)                 as validCnt,
+               ifnull(sum(case when status = 5 then amount else 0 end), 0) as turnover
+        from orders
+        where order_time &gt;= #{begin}
+          and order_time &lt;= #{end}
+        group by date_format(order_time, '%Y-%m-%d')
     </select>
     <select id="getSalesTop10" resultType="com.sky.dto.GoodsSalesDTO">
         select od.name, sum(od.number) number

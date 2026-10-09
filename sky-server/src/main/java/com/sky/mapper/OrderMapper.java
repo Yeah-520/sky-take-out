@@ -90,6 +90,17 @@ public interface OrderMapper {
     List<Orders> getByStatusAndOrderTimeLT(Integer status, LocalDateTime orderTime);
 
     /**
+     * 根据状态和送达时间查询订单
+     *
+     * @param status       订单状态
+     * @param deliveryTime 送达时间阈值(早于该时间即视为超时)
+     * @return 订单列表
+     */
+    @Select("select * from orders where status = #{status} and delivery_time < #{deliveryTime}")
+    List<Orders> getByStatusAndDeliveryTimeLT(@Param("status") Integer status,
+                                              @Param("deliveryTime") LocalDateTime deliveryTime);
+
+    /**
      * 修改订单状态
      *
      * @param orderStatus     订单状态
@@ -127,6 +138,16 @@ public interface OrderMapper {
      */
     List<Map<String, Object>> countGroupByStatus(@Param("begin") LocalDateTime begin,
                                                  @Param("end") LocalDateTime end);
+
+    /**
+     * 按"天"分组统计订单:一次查询拿到区间内每天的订单数、有效订单数、营业额
+     *
+     * @param begin 下单时间起(含)
+     * @param end   下单时间止(含)
+     * @return 按天聚合的结果
+     */
+    List<Map<String, Object>> countGroupByDate(@Param("begin") LocalDateTime begin,
+                                               @Param("end") LocalDateTime end);
 
     /**
      * 查询Top10菜品

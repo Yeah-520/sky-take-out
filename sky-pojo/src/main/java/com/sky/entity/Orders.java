@@ -66,6 +66,9 @@ public class Orders implements Serializable {
     //实收金额
     private BigDecimal amount;
 
+    //配送费
+    private BigDecimal deliveryFee;
+
     //备注
     private String remark;
 
