@@ -15,9 +15,9 @@ public class SnowflakeConfig {
      * 多服务器部署时，每台机器配置不同workerId，防止ID重复
      */
     @Value("${sky.snowflake.worker-id:1}")
-    long workerId;
+    private long workerId;
     @Value("${sky.snowflake.data-center-id:0}")
-    long dataCenterId;
+    private long dataCenterId;
 
     @Bean
     public Snowflake snowflake() {

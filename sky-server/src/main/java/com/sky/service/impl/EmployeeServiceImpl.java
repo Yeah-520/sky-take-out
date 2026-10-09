@@ -17,8 +17,8 @@ import com.sky.result.PageResult;
 import com.sky.service.EmployeeService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.DigestUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -28,6 +28,8 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private EmployeeMapper employeeMapper;
+
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     /**
      * 员工登录
@@ -42,7 +44,6 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         //1、根据用户名查询数据库中的数据
         Employee employee = employeeMapper.getByUsername(username);
-
         //2、处理各种异常情况（用户名不存在、密码不对、账号被锁定）
         if (employee == null) {
             //账号不存在
@@ -51,9 +52,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         //密码比对
         // 对前端传过来的明文密码进行加密处理
-        password = DigestUtils.md5DigestAsHex(password.getBytes());
-        if (!password.equals(employee.getPassword())) {
-            //密码错误
+        if (!passwordEncoder.matches(password, employee.getPassword())) {
             throw new PasswordErrorException(MessageConstant.PASSWORD_ERROR);
         }
 
@@ -77,8 +76,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 拷贝对象
         BeanUtils.copyProperties(employeeDTO, employee);
         employee.setStatus(StatusConstant.ENABLE);
-        employee.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes()));
-
+        employee.setPassword(passwordEncoder.encode(PasswordConstant.DEFAULT_PASSWORD));
         employeeMapper.insert(employee);
     }
 
@@ -111,6 +109,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 根据id修改员工信息
+     *
      * @param employeeDTO 员工DTO
      */
     @Override
