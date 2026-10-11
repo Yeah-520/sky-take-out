@@ -1,5 +1,6 @@
 package com.sky.controller.user;
 
+import com.sky.constant.RedisConstant;
 import com.sky.constant.StatusConstant;
 import com.sky.entity.Dish;
 import com.sky.result.Result;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController("userDishController")
 @RequestMapping("/user/dish")
@@ -22,7 +24,7 @@ public class DishController {
     private DishService dishService;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 根据分类id查询菜品
@@ -33,12 +35,13 @@ public class DishController {
     @GetMapping("/list")
     public Result<List<DishVO>> list(Long categoryId) {
 
-        String key = "dish_" + categoryId;
+        String key = RedisConstant.DISH_CACHE_KEY_PREFIX + categoryId;
 
-        List<DishVO> list = (List<DishVO>) redisTemplate.opsForValue().get(key);
-        if (list != null && !list.isEmpty()) {
+        // 命中缓存直接返回(包含"空列表"这种结果,用于防缓存穿透)
+        Object cached = redisTemplate.opsForValue().get(key);
+        if (cached != null) {
             log.info("从缓存中获取菜品列表");
-            return Result.success(list);
+            return Result.success(toDishVOList(cached));
         }
 
         log.info("从数据库中获取菜品列表");
@@ -46,12 +49,30 @@ public class DishController {
         dish.setCategoryId(categoryId);
         dish.setStatus(StatusConstant.ENABLE);//查询起售中的菜品
 
-        list = dishService.listWithFlavor(dish);
+        List<DishVO> list = dishService.listWithFlavor(dish);
 
-        log.info("将菜品列表缓存到Redis");
-        redisTemplate.opsForValue().set(key, list);
+        if (list.isEmpty()) {
+            // 空结果也缓存(短 TTL):不存在的分类不再每次都打到数据库,防止缓存穿透
+            log.info("分类 {} 下没有起售菜品,缓存空结果 {} 秒", categoryId, RedisConstant.EMPTY_CACHE_TTL_SECONDS);
+            redisTemplate.opsForValue().set(key, list, RedisConstant.EMPTY_CACHE_TTL_SECONDS, TimeUnit.SECONDS);
+        } else {
+            // 加 TTL,避免菜品改过之后缓存长期不失效(admin 侧 cleanCache 是第一道失效手段)
+            log.info("将菜品列表缓存到Redis");
+            redisTemplate.opsForValue().set(key, list, RedisConstant.DISH_CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+        }
 
         return Result.success(list);
+    }
+
+    /**
+     * 把缓存里的值还原成菜品列表
+     * <p>value 用 JSON 序列化且**带类型信息**(见 RedisConfiguration#jsonSerializer),
+     * 所以这里能还原成真正的 {@code List<DishVO>};若换成不带类型信息的序列化器,
+     * 取出来会是 {@code List<LinkedHashMap>},强转就会失败。
+     */
+    @SuppressWarnings("unchecked")
+    private List<DishVO> toDishVOList(Object cached) {
+        return (List<DishVO>) cached;
     }
 
 }

@@ -481,7 +481,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStatus(Orders.CANCELLED);
         order.setCancelTime(LocalDateTime.now());
-        order.setCancelReason("用户取消");
+        order.setCancelReason(MessageConstant.USER_CANCELED);
 
         orderMapper.update(order);
     }

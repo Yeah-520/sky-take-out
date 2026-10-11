@@ -1,5 +1,6 @@
 package com.sky.task;
 
+import com.sky.constant.MessageConstant;
 import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,7 @@ public class OrderTask {
                 }
                 orders.setStatus(Orders.CANCELLED);
                 orders.setCancelTime(LocalDateTime.now());
-                orders.setCancelReason("订单超时取消");
+                orders.setCancelReason(MessageConstant.ORDER_CANCELED);
                 orderMapper.update(orders);
             }
         }
