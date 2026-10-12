@@ -16,6 +16,9 @@ spring:
     host: ${sky.redis.host}
     port: ${sky.redis.port}
     database: ${sky.redis.database}
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
 mybatis:
   #mapper配置文件
@@ -43,13 +46,13 @@ sky:
     fee-per-item: 1.0
 
   jwt:
-    # 设置jwt签名加密时使用的秘钥
-    admin-secret-key: itcast
+    # 设置jwt签名加密时使用的秘钥(从环境变量注入;本地开发在 application-dev.yml 中覆盖)
+    admin-secret-key: ${SKY_JWT_ADMIN_SECRET}
     # 设置jwt过期时间
     admin-ttl: 7200000
     # 设置前端传递过来的令牌名称
     admin-token-name: token
-    user-secret-key: itheima
+    user-secret-key: ${SKY_JWT_USER_SECRET}
     user-ttl: 7200000
     user-token-name: authentication
 
