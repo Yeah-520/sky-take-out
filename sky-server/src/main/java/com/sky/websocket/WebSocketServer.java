@@ -41,7 +41,6 @@ public class WebSocketServer {
     @OnMessage
     public void onMessage(String message, @PathParam("sid") String sid) {
         log.info("收到客户端：{} 的消息：{}", sid, message);
-        log.info("收到来自客户端：{} 的信息:{}", sid, message);
     }
 
     /**

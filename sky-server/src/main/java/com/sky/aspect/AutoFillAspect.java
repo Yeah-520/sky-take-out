@@ -2,8 +2,10 @@ package com.sky.aspect;
 
 import com.sky.annotation.AutoFill;
 import com.sky.constant.AutoFillConstant;
+import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
 import com.sky.enumeration.OperationType;
+import com.sky.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -74,7 +76,7 @@ public class AutoFillAspect {
                         .invoke(entity, currentId);
             } catch (Exception e) {
                 log.error("AutoFillAspect INSERT 自动填充失败,entity={}", entity.getClass().getName(), e);
-                throw new RuntimeException("公共字段自动填充失败", e);
+                throw new BaseException(MessageConstant.AUTO_FILL_FAILED);
             }
         } else if (operationType == OperationType.UPDATE) {
             try {
@@ -87,8 +89,8 @@ public class AutoFillAspect {
                         .getMethod(AutoFillConstant.SET_UPDATE_USER, Long.class)
                         .invoke(entity, currentId);
             } catch (Exception e) {
-                log.error("AutoFillAspect 在UPDATE自动填充失败 错误：{}", entity.getClass().getName(), e);
-                throw new RuntimeException("公共字段自动填充失败", e);
+                log.error("AutoFillAspect UPDATE 自动填充失败,entity={}", entity.getClass().getName(), e);
+                throw new BaseException(MessageConstant.AUTO_FILL_FAILED);
             }
         }
     }

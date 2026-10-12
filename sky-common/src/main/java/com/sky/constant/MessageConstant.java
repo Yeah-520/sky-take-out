@@ -21,6 +21,10 @@ public class MessageConstant {
     public static final String DISH_ON_SALE = "起售中的菜品不能删除";
     public static final String SETMEAL_ON_SALE = "起售中的套餐不能删除";
     public static final String DISH_BE_RELATED_BY_SETMEAL = "当前菜品关联了套餐,不能删除";
+    public static final String DISH_NOT_FOUND = "菜品不存在";
+    public static final String SETMEAL_NOT_FOUND = "套餐不存在";
+    public static final String AUTO_FILL_FAILED = "公共字段自动填充失败";
+    public static final String SHOPPING_CART_PARAM_ERROR = "菜品和套餐不能同时为空";
     public static final String ORDER_STATUS_ERROR = "订单状态错误";
     public static final String ORDER_NOT_FOUND = "订单不存在";
     public static final String USER_INFO_MISMATCH = "用户信息不匹配";
