@@ -23,7 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -76,6 +78,9 @@ public class DishServiceImpl implements DishService {
         // 判断菜品是否在售
         for (Long id : ids) {
             Dish dish = dishMapper.getById(id);
+            if (dish == null) {
+                throw new DishBusinessException(MessageConstant.DISH_NOT_FOUND);
+            }
             if (Objects.equals(dish.getStatus(), StatusConstant.ENABLE)) {
                 throw new DishBusinessException(MessageConstant.DISH_ON_SALE);
             }
@@ -105,6 +110,9 @@ public class DishServiceImpl implements DishService {
     @Override
     public DishVO getByIdWithFlavor(Long id) {
         Dish dish = dishMapper.getById(id);
+        if (dish == null) {
+            throw new DishBusinessException(MessageConstant.DISH_NOT_FOUND);
+        }
 
         List<DishFlavor> flavors = dishFlavorMapper.getByDishId(id);
 
@@ -170,17 +178,23 @@ public class DishServiceImpl implements DishService {
     @Override
     public List<DishVO> listWithFlavor(Dish dish) {
         List<Dish> dishList = dishMapper.list(dish.getCategoryId());
+        if (dishList == null || dishList.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 一次批量查出所有菜品的口味,按菜品id分组,消除逐条查询的 N+1 问题
+        List<Long> dishIds = dishList.stream().map(Dish::getId).collect(Collectors.toList());
+        List<DishFlavor> allFlavors = dishFlavorMapper.getByDishIds(dishIds);
+        Map<Long, List<DishFlavor>> flavorMap = allFlavors.stream()
+                .collect(Collectors.groupingBy(DishFlavor::getDishId));
 
         List<DishVO> dishVOList = new ArrayList<>();
-
         for (Dish d : dishList) {
             DishVO dishVO = new DishVO();
             BeanUtils.copyProperties(d, dishVO);
 
-            //根据菜品id查询对应的口味
-            List<DishFlavor> flavors = dishFlavorMapper.getByDishId(d.getId());
-
-            dishVO.setFlavors(flavors);
+            // 从分组结果中取该菜品的口味
+            dishVO.setFlavors(flavorMap.getOrDefault(d.getId(), new ArrayList<>()));
             dishVOList.add(dishVO);
         }
 

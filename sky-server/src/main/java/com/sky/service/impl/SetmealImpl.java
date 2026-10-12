@@ -9,6 +9,7 @@ import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.entity.Dish;
 import com.sky.entity.Setmeal;
 import com.sky.entity.SetmealDish;
+import com.sky.exception.BaseException;
 import com.sky.exception.SetmealEnableFailedException;
 import com.sky.mapper.DishMapper;
 import com.sky.mapper.SetmealDishMapper;
@@ -84,6 +85,9 @@ public class SetmealImpl implements SetmealService {
     @Override
     public SetmealVO getByIdWithDish(Long id) {
         Setmeal setmeal = setmealMapper.getById(id);
+        if (setmeal == null) {
+            throw new BaseException(MessageConstant.SETMEAL_NOT_FOUND);
+        }
         List<SetmealDish> setmealDishes = setmealDishMapper.getBySetmealId(id);
 
         SetmealVO setmealVO = new SetmealVO();

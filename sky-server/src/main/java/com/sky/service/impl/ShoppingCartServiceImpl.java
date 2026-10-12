@@ -38,6 +38,14 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
      */
     @Override
     public void addShoppingCart(ShoppingCartDTO shoppingCartDTO) {
+        // 校验:菜品id与套餐id不能同时为空
+        // 必须在任何查询之前校验:否则当购物车非空时,list() 会返回该用户全部行,走"已存在则+1"分支而绕过校验
+        Long dishId = shoppingCartDTO.getDishId();
+        Long setmealId = shoppingCartDTO.getSetmealId();
+        if (dishId == null && setmealId == null) {
+            throw new ShoppingCartBusinessException(MessageConstant.SHOPPING_CART_PARAM_ERROR);
+        }
+
         ShoppingCart shoppingCart = new ShoppingCart();
         BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
         shoppingCart.setUserId(BaseContext.getCurrentId());
@@ -47,26 +55,27 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             // 如果存在，则数量加一
             ShoppingCart cart = shoppingCartList.get(0);
             cart.setNumber(cart.getNumber() + 1);
-            shoppingCart.setAmount(cart.getAmount());
             shoppingCartMapper.updateNumberById(cart);
         } else {
             // 如果不存在，则新增
-            Long dishId = shoppingCartDTO.getDishId();
             if (dishId != null) {
                 // 本次加入购物车的菜品
                 Dish dish = dishMapper.getById(dishId);
+                if (dish == null) {
+                    throw new ShoppingCartBusinessException(MessageConstant.DISH_NOT_FOUND);
+                }
                 shoppingCart.setName(dish.getName());
                 shoppingCart.setImage(dish.getImage());
                 shoppingCart.setAmount(dish.getPrice());
-            } else {
+            } else if (setmealId != null) {
                 // 本次加入购物车的套餐
-                Long setmealId = shoppingCartDTO.getSetmealId();
-
                 Setmeal setmeal = setmealMapper.getById(setmealId);
+                if (setmeal == null) {
+                    throw new ShoppingCartBusinessException(MessageConstant.SETMEAL_NOT_FOUND);
+                }
                 shoppingCart.setName(setmeal.getName());
                 shoppingCart.setImage(setmeal.getImage());
                 shoppingCart.setAmount(setmeal.getPrice());
-
             }
             shoppingCart.setNumber(1);
             shoppingCart.setCreateTime(LocalDateTime.now());

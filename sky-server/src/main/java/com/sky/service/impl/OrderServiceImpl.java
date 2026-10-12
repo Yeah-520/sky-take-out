@@ -534,11 +534,7 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void reminder(Long id) {
-        Orders order = orderMapper.getById(id);
-
-        if (order == null) {
-            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
-        }
+        Orders order = getOwnedOrder(id);
 
         Map<String, Object> map = new HashMap<>();
         map.put("type", 2); // 2表示订单提醒

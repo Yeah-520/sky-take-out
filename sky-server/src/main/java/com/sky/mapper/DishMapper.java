@@ -102,14 +102,7 @@ public interface DishMapper {
     void updateStatus(Integer status, Long id);
 
     /**
-     * 根据条件统计菜品数量
-     * @param map
-     * @return
-     */
-    Integer countByMap(Map map);
-
-    /**
-     * 【性能优化】按菜品状态分组统计:一次查询替代两次 countByMap
+     * 【性能优化】按菜品状态分组统计:一次查询替代原来按状态多次 count
      *
      * @return 每行两个字段:{@code status}、{@code cnt}(数量)
      */

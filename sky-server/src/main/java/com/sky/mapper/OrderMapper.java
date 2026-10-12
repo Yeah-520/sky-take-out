@@ -24,6 +24,7 @@ public interface OrderMapper {
 
     /**
      * 根据订单号查询订单
+     * <p>依赖 orders.number 唯一约束(uk_orders_number)保证只返回一条
      *
      * @param orderNumber 订单号
      */
@@ -110,22 +111,6 @@ public interface OrderMapper {
      */
     @Update("update orders set status = #{orderStatus},pay_status = #{orderPaidStatus} ,checkout_time = #{check_out_time} where id = #{id}")
     void updateStatus(Integer orderStatus, Integer orderPaidStatus, LocalDateTime check_out_time, Long id);
-
-    /**
-     * 查询营业额
-     *
-     * @param map 查询条件
-     * @return 订单列表
-     */
-    Double sumByMap(Map<String, Object> map);
-
-    /**
-     * 根据条件查询订单数量
-     *
-     * @param map 查询条件
-     * @return 订单数量
-     */
-    Integer countByMap(Map<String, Object> map);
 
     /**
      * 【性能优化】按订单状态分组统计:一次查询拿到全部状态的订单数与金额合计
